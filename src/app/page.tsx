@@ -62,16 +62,6 @@ export default async function Home() {
           )}
         </p>
 
-        <section className="mt-8 rounded-xl bg-slate-100 p-5">
-          <h2 className="text-lg font-semibold">Roadmap MVP</h2>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-slate-700">
-            <li>Registrazione e accesso con Supabase (fatto).</li>
-            <li>Dashboard per ruolo (questa schermata e la pagina Dashboard).</li>
-            <li>Richiesta acquirente e risposta negozio.</li>
-            <li>Messaggi in-app tra le parti.</li>
-          </ol>
-        </section>
-
         <div className="mt-8 flex flex-wrap gap-3">
           {loggedIn ? (
             <>

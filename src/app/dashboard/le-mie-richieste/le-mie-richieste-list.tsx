@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { parseAllegati } from "@/lib/chat-types";
 import {
   formatoZonaRichiesta,
   parseCategorieRichiesta,
@@ -210,6 +211,7 @@ export function LeMieRichiesteList() {
           {rows.map((r) => {
             const stato = statoLabel(r.stato);
             const cats = parseCategorieRichiesta(r.categorie);
+            const fotoRichiesta = parseAllegati(r.allegati);
             const aperta = stato === "aperta";
             const nonLetti = unreadByRichiesta.get(r.id) ?? 0;
 
@@ -270,6 +272,26 @@ export function LeMieRichiesteList() {
                 </div>
 
                 <p className="mt-3 whitespace-pre-wrap text-slate-900">{r.testo}</p>
+                {fotoRichiesta.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {fotoRichiesta.map((img) => (
+                      <a
+                        key={img.url}
+                        href={img.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.url}
+                          alt={img.name ?? "Foto"}
+                          className="h-16 w-16 rounded-md border border-slate-200 object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
 
                 <dl className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
                   <div>

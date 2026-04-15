@@ -35,6 +35,7 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [richiestaTesto, setRichiestaTesto] = useState<string | null>(null);
+  const [richiestaAllegati, setRichiestaAllegati] = useState<AllegatoMessaggio[]>([]);
   const [conversazioni, setConversazioni] = useState<ConvLabel[]>([]);
   const [selezionata, setSelezionata] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
@@ -100,7 +101,7 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
 
       const { data: richiesta, error: er } = await supabase
         .from("richieste")
-        .select("testo, acquirente_id, stato")
+        .select("testo, acquirente_id, stato, allegati")
         .eq("id", richiestaId)
         .maybeSingle();
 
@@ -111,6 +112,7 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
         return;
       }
       setRichiestaTesto(typeof richiesta.testo === "string" ? richiesta.testo : null);
+      setRichiestaAllegati(parseAllegati(richiesta.allegati));
       const st = richiesta.stato;
       if (!cancelled && (st === "aperta" || st === "chiusa")) {
         setStatoRichiestaInit(st);
@@ -301,10 +303,30 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
       {error && ready ? (
         <div className="border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-800">{error}</div>
       ) : null}
-      {richiestaTesto ? (
+      {richiestaTesto || richiestaAllegati.length > 0 ? (
         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">La tua richiesta</p>
-          <p className="mt-1 text-sm text-slate-800">{richiestaTesto}</p>
+          {richiestaTesto ? <p className="mt-1 text-sm text-slate-800">{richiestaTesto}</p> : null}
+          {richiestaAllegati.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {richiestaAllegati.map((img) => (
+                <a
+                  key={img.url}
+                  href={img.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.url}
+                    alt={img.name ?? "Foto richiesta"}
+                    className="max-h-40 max-w-[200px] rounded-lg border border-slate-200 object-cover"
+                  />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 

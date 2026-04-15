@@ -1,15 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SelettoreProvinciaComune } from "@/components/selettore-provincia-comune";
 import {
   CATEGORIE_MERCEOLOGICHE,
   MAX_CATEGORIE_RICHIESTA,
 } from "@/lib/categorie-negozio";
+import type { AllegatoMessaggio } from "@/lib/chat-types";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+
+const BUCKET_ALLEGATI = "messaggi-allegati";
+const MAX_IMMAGINI_RICHIESTA = 6;
+const MAX_MB_IMMAGINE = 5;
 
 const PLACEHOLDER_RICHIESTA =
   "Es.: cerco tavolo da giardino in legno per 4 persone, budget intorno ai 200 euro; oppure: cerco farmacia che faccia consegna a domicilio entro domani sera.";
@@ -32,6 +37,8 @@ export function NuovaRichiestaForm() {
     "idle",
   );
   const [categorie, setCategorie] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [errore, setErrore] = useState("");
   const [caricamento, setCaricamento] = useState(false);
@@ -100,6 +107,24 @@ export function NuovaRichiestaForm() {
       }
       return [...prev, nome];
     });
+  };
+
+  const onFilePick = (list: FileList | null) => {
+    if (!list?.length) return;
+    const next: File[] = [...files];
+    for (let i = 0; i < list.length; i++) {
+      const f = list[i];
+      if (!f.type.startsWith("image/")) continue;
+      if (f.size > MAX_MB_IMMAGINE * 1024 * 1024) continue;
+      if (next.length >= MAX_IMMAGINI_RICHIESTA) break;
+      next.push(f);
+    }
+    setFiles(next);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const rimuoviFile = (idx: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const acquisisciPosizione = () => {
@@ -172,9 +197,26 @@ export function NuovaRichiestaForm() {
         return;
       }
 
+      const richiestaId = crypto.randomUUID();
+      const allegati: AllegatoMessaggio[] = [];
+      for (const f of files) {
+        const ext = f.name.split(".").pop() || "jpg";
+        const path = `${user.id}/richiesta/${richiestaId}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from(BUCKET_ALLEGATI)
+          .upload(path, f, { cacheControl: "3600", upsert: false });
+        if (upErr) {
+          setErrore(`Caricamento immagine fallito: ${upErr.message}`);
+          return;
+        }
+        const { data: pub } = supabase.storage.from(BUCKET_ALLEGATI).getPublicUrl(path);
+        allegati.push({ url: pub.publicUrl, path, name: f.name });
+      }
+
       const row =
         zonaTipo === "gps"
           ? {
+              id: richiestaId,
               acquirente_id: user.id,
               testo: testoPulito,
               zona_tipo: "gps" as const,
@@ -183,8 +225,10 @@ export function NuovaRichiestaForm() {
               lng,
               comune: null,
               categorie,
+              allegati,
             }
           : {
+              id: richiestaId,
               acquirente_id: user.id,
               testo: testoPulito,
               zona_tipo: "comune" as const,
@@ -193,15 +237,18 @@ export function NuovaRichiestaForm() {
               lng: null,
               comune: comune.trim(),
               categorie,
+              allegati,
             };
 
       const { error } = await supabase.from("richieste").insert(row);
 
       if (error) {
         setErrore(
-          error.message.includes("richieste")
-            ? "Impossibile salvare: verifica di aver eseguito lo script SQL `supabase/richieste_acquirenti.sql` nel progetto Supabase."
-            : error.message,
+          error.message.includes("allegati") || error.code === "42703"
+            ? "Aggiorna il database: esegui lo script `supabase/richieste_allegati_foto.sql` in Supabase (colonna allegati sulle richieste)."
+            : error.message.includes("richieste")
+              ? "Impossibile salvare: verifica di aver eseguito lo script SQL `supabase/richieste_acquirenti.sql` nel progetto Supabase."
+              : error.message,
         );
         return;
       }
@@ -267,6 +314,52 @@ export function NuovaRichiestaForm() {
           <p className="mt-1 text-xs text-slate-500">
             Il testo in grigio chiaro e` solo un suggerimento: scompare quando inizi a scrivere.
           </p>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-slate-900">Foto (facoltativo)</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Fino a {MAX_IMMAGINI_RICHIESTA} immagini, max {MAX_MB_IMMAGINE} MB ciascuna. Visibili ai negozi insieme al testo della richiesta.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              id="richiesta-foto"
+              onChange={(ev) => onFilePick(ev.target.files)}
+            />
+            <label
+              htmlFor="richiesta-foto"
+              className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+            >
+              Scegli foto
+            </label>
+            <span className="text-xs text-slate-600">
+              {files.length} / {MAX_IMMAGINI_RICHIESTA}
+            </span>
+          </div>
+          {files.length > 0 ? (
+            <ul className="mt-3 space-y-2">
+              {files.map((f, idx) => (
+                <li
+                  key={`${f.name}-${idx}`}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                >
+                  <span className="truncate">{f.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => rimuoviFile(idx)}
+                    className="shrink-0 text-xs font-semibold text-red-700 underline"
+                  >
+                    Rimuovi
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <fieldset className="space-y-4">

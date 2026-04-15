@@ -10,6 +10,8 @@ export type RichiestaRow = {
   lng: number | null;
   comune: string | null;
   categorie: unknown;
+  /** Foto allegate alla richiesta (stesso formato degli allegati in chat). */
+  allegati?: unknown;
   created_at: string;
   stato: RichiestaStato;
   chiusa_at: string | null;

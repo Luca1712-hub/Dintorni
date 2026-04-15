@@ -11,6 +11,7 @@ create table if not exists public.richieste (
   lng double precision null,
   comune text null,
   categorie jsonb not null default '[]'::jsonb,
+  allegati jsonb not null default '[]'::jsonb,
   stato text not null default 'aperta' check (stato in ('aperta', 'chiusa')),
   chiusa_at timestamptz null,
   created_at timestamptz not null default now(),
@@ -37,6 +38,10 @@ create table if not exists public.richieste (
     jsonb_typeof(categorie) = 'array'
     and jsonb_array_length(categorie) >= 1
     and jsonb_array_length(categorie) <= 3
+  ),
+  constraint richieste_allegati_json check (
+    jsonb_typeof(allegati) = 'array'
+    and jsonb_array_length(allegati) <= 6
   )
 );
 
@@ -99,6 +104,7 @@ begin
      or new.lng is distinct from old.lng
      or new.comune is distinct from old.comune
      or new.categorie is distinct from old.categorie
+     or new.allegati is distinct from old.allegati
      or new.acquirente_id is distinct from old.acquirente_id
      or new.id is distinct from old.id
      or new.created_at is distinct from old.created_at

@@ -1,0 +1,7 @@
+nella richiesta non c'è la possibilità di caricare foto.
+
+c'è il problema del certificato del sito.
+
+Non funzionano le notifiche push e nemmeno le mail
+
+PW Provaprova
