@@ -34,6 +34,11 @@ export default function AreaPersonalePage() {
   const [msgSchedaNegozio, setMsgSchedaNegozio] = useState("");
   const [errSchedaNegozio, setErrSchedaNegozio] = useState("");
 
+  const [comuneAcquirenteEdit, setComuneAcquirenteEdit] = useState("");
+  const [salvataggioComuneAcquirente, setSalvataggioComuneAcquirente] = useState(false);
+  const [msgComuneAcquirente, setMsgComuneAcquirente] = useState("");
+  const [errComuneAcquirente, setErrComuneAcquirente] = useState("");
+
   const loadProfile = useCallback(async () => {
     if (!isSupabaseConfigured()) {
       setUser(null);
@@ -84,6 +89,11 @@ export default function AreaPersonalePage() {
     setViaNegozioEdit(via);
     setComuneNegozioEdit(comuneLabel);
   }, [user?.ruolo, user?.indirizzoNegozio]);
+
+  useEffect(() => {
+    if (user?.ruolo !== "acquirente") return;
+    setComuneAcquirenteEdit((user.comuneAcquirente ?? "").trim());
+  }, [user?.ruolo, user?.comuneAcquirente]);
 
   const syncKeySchedaNegozio =
     user?.ruolo === "negozio"
@@ -184,6 +194,37 @@ export default function AreaPersonalePage() {
       setSalvataggioSchedaNegozio(false);
     }
   }, [user, nomeNegozioEdit, categorieNegozioEdit]);
+
+  const salvaComuneAcquirente = useCallback(async () => {
+    if (!user || user.ruolo !== "acquirente") return;
+    setErrComuneAcquirente("");
+    setMsgComuneAcquirente("");
+    const comune = comuneAcquirenteEdit.trim();
+    if (!comune || !/\([A-Z]{2}\)\s*$/.test(comune)) {
+      setErrComuneAcquirente("Seleziona provincia e comune dall'elenco.");
+      return;
+    }
+    setSalvataggioComuneAcquirente(true);
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) return;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ comune_acquirente: comune })
+        .eq("id", authUser.id);
+      if (error) {
+        setErrComuneAcquirente(error.message);
+        return;
+      }
+      setUser({ ...user, comuneAcquirente: comune });
+      setMsgComuneAcquirente("Comune aggiornato.");
+    } finally {
+      setSalvataggioComuneAcquirente(false);
+    }
+  }, [user, comuneAcquirenteEdit]);
 
   const aggiornaPreferenzaNotifiche = useCallback(
     async (campo: "notifiche_email" | "notifiche_push", valore: boolean) => {
@@ -298,6 +339,12 @@ export default function AreaPersonalePage() {
               <dd>{user.categorieNegozio.length ? user.categorieNegozio.join(", ") : "—"}</dd>
             </div>
           ) : null}
+          {user.ruolo === "acquirente" ? (
+            <div>
+              <dt className="font-semibold">Comune di riferimento</dt>
+              <dd>{user.comuneAcquirente?.trim() ? user.comuneAcquirente : "—"}</dd>
+            </div>
+          ) : null}
           <div>
             <dt className="font-semibold">Email</dt>
             <dd>{user.email}</dd>
@@ -375,6 +422,38 @@ export default function AreaPersonalePage() {
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
               >
                 {salvataggioSchedaNegozio ? "Salvataggio…" : "Salva nome e categorie"}
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {user.ruolo === "acquirente" ? (
+          <section className="mt-8 border-t border-slate-200 pt-6">
+            <h2 className="text-lg font-semibold text-slate-900">Provincia e comune</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Aggiorna il comune di riferimento sul territorio (come in fase di registrazione).
+            </p>
+            <div className="mt-4 space-y-4">
+              <SelettoreProvinciaComune
+                idPrefix="ap-acquirente"
+                value={comuneAcquirenteEdit}
+                onChange={setComuneAcquirenteEdit}
+                disabled={salvataggioComuneAcquirente}
+                legend="Comune di riferimento"
+              />
+              {errComuneAcquirente ? (
+                <p className="text-sm font-medium text-red-600">{errComuneAcquirente}</p>
+              ) : null}
+              {msgComuneAcquirente ? (
+                <p className="text-sm font-medium text-emerald-800">{msgComuneAcquirente}</p>
+              ) : null}
+              <button
+                type="button"
+                disabled={salvataggioComuneAcquirente}
+                onClick={() => void salvaComuneAcquirente()}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                {salvataggioComuneAcquirente ? "Salvataggio…" : "Salva comune"}
               </button>
             </div>
           </section>

@@ -2,6 +2,8 @@ export type DintorniUserProfile = {
   nome: string;
   nomeNegozio: string | null;
   indirizzoNegozio: string | null;
+  /** Comune di riferimento per acquirenti (etichetta ufficiale, es. "Milano (MI)"). */
+  comuneAcquirente: string | null;
   categorieNegozio: string[];
   email: string;
   ruolo: "acquirente" | "negozio";
@@ -21,6 +23,7 @@ export type DbProfileRow = {
   ruolo: "acquirente" | "negozio";
   nome_negozio: string | null;
   indirizzo_negozio: string | null;
+  comune_acquirente?: string | null;
   categorie_merceologiche: unknown;
   terms_version: string;
   privacy_version: string;
@@ -40,6 +43,9 @@ export function mapDbProfileToProfile(row: DbProfileRow): DintorniUserProfile {
     nome: row.nome,
     nomeNegozio: row.nome_negozio,
     indirizzoNegozio: row.indirizzo_negozio,
+    comuneAcquirente: row.comune_acquirente?.trim()
+      ? row.comune_acquirente.trim()
+      : null,
     categorieNegozio,
     email: row.email,
     ruolo: row.ruolo,

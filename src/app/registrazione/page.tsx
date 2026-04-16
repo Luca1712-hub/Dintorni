@@ -35,6 +35,7 @@ const MIN_PASSWORD_LENGTH = 8;
 export default function RegistrazionePage() {
   const router = useRouter();
   const [nome, setNome] = useState("");
+  const [comuneAcquirente, setComuneAcquirente] = useState("");
   const [nomeNegozio, setNomeNegozio] = useState("");
   const [indirizzoNegozio, setIndirizzoNegozio] = useState("");
   const [comuneNegozio, setComuneNegozio] = useState("");
@@ -50,7 +51,11 @@ export default function RegistrazionePage() {
   const [caricamento, setCaricamento] = useState(false);
 
   useEffect(() => {
-    if (ruolo !== "negozio") setComuneNegozio("");
+    if (ruolo === "negozio") {
+      setComuneAcquirente("");
+    } else {
+      setComuneNegozio("");
+    }
   }, [ruolo]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -85,6 +90,12 @@ export default function RegistrazionePage() {
     }
 
     const comuneNegozioPulito = comuneNegozio.trim();
+    const comuneAcquirentePulito = comuneAcquirente.trim();
+    if (ruolo === "acquirente" && !comuneAcquirentePulito) {
+      setErrore("Seleziona provincia e comune di riferimento.");
+      return;
+    }
+
     if (ruolo === "negozio" && !comuneNegozioPulito) {
       setErrore("Se scegli Negozio, seleziona provincia e comune del negozio.");
       return;
@@ -160,7 +171,9 @@ export default function RegistrazionePage() {
                     ? { negozio_lat: negozioLatMeta, negozio_lng: negozioLngMeta }
                     : {}),
                 }
-              : {}),
+              : {
+                  comune_acquirente: comuneAcquirentePulito,
+                }),
           },
         },
       });
@@ -255,6 +268,22 @@ export default function RegistrazionePage() {
               placeholder="Es. Mario Rossi"
             />
           </div>
+
+          {ruolo === "acquirente" ? (
+            <div>
+              <SelettoreProvinciaComune
+                idPrefix="reg-acquirente"
+                value={comuneAcquirente}
+                onChange={setComuneAcquirente}
+                disabled={caricamento}
+                legend="Provincia e comune (obbligatorio)"
+              />
+              <p className="mt-2 text-xs text-slate-600">
+                Indica il comune di riferimento sul territorio (residenza o zona in cui cerchi
+                prodotti e servizi).
+              </p>
+            </div>
+          ) : null}
 
           {ruolo === "negozio" ? (
             <>
