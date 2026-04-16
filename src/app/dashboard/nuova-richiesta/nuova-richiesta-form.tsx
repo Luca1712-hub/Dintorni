@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SelettoreProvinciaComune } from "@/components/selettore-provincia-comune";
+import {
+  MAX_COMUNI_RICHIESTA,
+  SelettoreProvinciaComuniRichiesta,
+  type ZonaComuniRichiestaValue,
+} from "@/components/selettore-provincia-comuni-richiesta";
 import {
   CATEGORIE_MERCEOLOGICHE,
   MAX_CATEGORIE_RICHIESTA,
@@ -30,7 +34,11 @@ export function NuovaRichiestaForm() {
   const [testo, setTesto] = useState("");
   const [zonaTipo, setZonaTipo] = useState<ZonaTipo>("gps");
   const [raggioKm, setRaggioKm] = useState<RaggioKm>(10);
-  const [comune, setComune] = useState("");
+  const [zonaComuni, setZonaComuni] = useState<ZonaComuniRichiestaValue>({
+    provinciaSigla: "",
+    tuttaProvincia: false,
+    comuniLabels: [],
+  });
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "ok" | "err">(
@@ -87,7 +95,7 @@ export function NuovaRichiestaForm() {
 
   useEffect(() => {
     if (zonaTipo === "gps") {
-      setComune("");
+      setZonaComuni({ provinciaSigla: "", tuttaProvincia: false, comuniLabels: [] });
     } else {
       setLat(null);
       setLng(null);
@@ -174,9 +182,19 @@ export function NuovaRichiestaForm() {
         return;
       }
     } else {
-      const c = comune.trim();
-      if (c.length < 4 || !/\([A-Z]{2}\)\s*$/.test(c)) {
-        setErrore("Seleziona provincia e comune dall'elenco ufficiale.");
+      const sigla = zonaComuni.provinciaSigla.trim().toUpperCase();
+      if (!sigla || sigla.length !== 2) {
+        setErrore("Seleziona la provincia in cui cercare.");
+        return;
+      }
+      if (!zonaComuni.tuttaProvincia && zonaComuni.comuniLabels.length === 0) {
+        setErrore(
+          "Seleziona almeno un comune oppure l'opzione per cercare in tutta la provincia.",
+        );
+        return;
+      }
+      if (!zonaComuni.tuttaProvincia && zonaComuni.comuniLabels.length > MAX_COMUNI_RICHIESTA) {
+        setErrore(`Puoi selezionare al massimo ${MAX_COMUNI_RICHIESTA} comuni.`);
         return;
       }
     }
@@ -235,7 +253,10 @@ export function NuovaRichiestaForm() {
               raggio_km: null,
               lat: null,
               lng: null,
-              comune: comune.trim(),
+              comune: null,
+              provincia_sigla: zonaComuni.provinciaSigla.trim().toUpperCase(),
+              comuni_tutta_provincia: zonaComuni.tuttaProvincia,
+              comuni: zonaComuni.tuttaProvincia ? null : zonaComuni.comuniLabels,
               categorie,
               allegati,
             };
@@ -246,9 +267,13 @@ export function NuovaRichiestaForm() {
         setErrore(
           error.message.includes("allegati") || error.code === "42703"
             ? "Aggiorna il database: esegui lo script `supabase/richieste_allegati_foto.sql` in Supabase (colonna allegati sulle richieste)."
-            : error.message.includes("richieste")
-              ? "Impossibile salvare: verifica di aver eseguito lo script SQL `supabase/richieste_acquirenti.sql` nel progetto Supabase."
-              : error.message,
+            : error.message.includes("provincia_sigla") ||
+                error.message.includes("comuni_tutta_provincia") ||
+                (error.message.includes("comuni") && error.code === "42703")
+              ? "Aggiorna il database: esegui lo script `supabase/richieste_zona_comuni_multipli.sql` in Supabase."
+              : error.message.includes("richieste")
+                ? "Impossibile salvare: verifica di aver eseguito gli script SQL sulle richieste nel progetto Supabase."
+                : error.message,
         );
         return;
       }
@@ -293,8 +318,8 @@ export function NuovaRichiestaForm() {
     <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
       <h1 className="text-2xl font-bold">Nuova richiesta</h1>
       <p className="mt-2 text-slate-700">
-        Descrivi cosa cerchi, dove (intorno a te o in un comune) e a quali categorie di negozi
-        inviare la richiesta.
+        Descrivi cosa cerchi, dove (intorno a te oppure per provincia e comuni) e a quali categorie
+        di negozi inviare la richiesta.
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-8">
@@ -434,23 +459,22 @@ export function NuovaRichiestaForm() {
                 className="mt-1"
               />
               <span>
-                <span className="font-medium">Indica un comune</span>
+                <span className="font-medium">Provincia e comuni (senza GPS)</span>
                 <span className="mt-1 block text-sm text-slate-600">
-                  Scegli provincia e comune dall&apos;elenco (dati ufficiali). La richiesta sara` legata a
-                  quel comune, senza usare il GPS.
+                  Scegli la provincia, poi seleziona uno o più comuni in cui cercare, oppure
+                  &quot;tutta la provincia&quot;. I negozi vedono la richiesta solo se la loro sede
+                  cade nella zona scelta.
                 </span>
               </span>
             </label>
 
             {zonaTipo === "comune" ? (
               <div className="ml-6 space-y-3 border-l-2 border-blue-100 pl-4">
-                <SelettoreProvinciaComune
-                  key={zonaTipo}
-                  idPrefix="richiesta-comune"
-                  value={comune}
-                  onChange={setComune}
+                <p className="text-sm font-medium text-slate-900">Zona della richiesta</p>
+                <SelettoreProvinciaComuniRichiesta
+                  value={zonaComuni}
+                  onChange={setZonaComuni}
                   disabled={caricamento}
-                  legend="Zona della richiesta"
                 />
               </div>
             ) : null}

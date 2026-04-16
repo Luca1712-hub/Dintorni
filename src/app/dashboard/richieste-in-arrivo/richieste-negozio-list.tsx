@@ -160,9 +160,10 @@ export function RichiesteNegozioList() {
               (<strong>{nomeNegozio}</strong>)
             </>
           ) : null}
-          , e in cui la zona coincide con il tuo profilo: per richieste per <strong>comune</strong> il
-          comune deve combaciare; per richieste <strong>GPS</strong> la sede del negozio (coordinate
-          salvate da indirizzo) deve rientrare nel raggio indicato.
+          , e in cui la zona coincide con il tuo profilo: per richieste <strong>senza GPS</strong> la
+          sede del negozio deve essere in uno dei comuni scelti dall&apos;acquirente, oppure in{" "}
+          <strong>qualsiasi comune della provincia</strong> se ha scelto &quot;tutta la provincia&quot;;
+          per richieste <strong>GPS</strong> la sede deve rientrare nel raggio indicato.
         </p>
         {categorieNegozio.length === 0 ? (
           <p className="mt-2 font-medium text-amber-800">

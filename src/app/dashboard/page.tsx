@@ -115,8 +115,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             >
               <h2 className="text-lg font-semibold text-slate-900">Nuova richiesta</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Descrivi cosa cerchi, scegli zona (intorno a te o un comune) e fino a tre categorie di
-                negozi.
+                Descrivi cosa cerchi, scegli zona (GPS, oppure provincia con uno o più comuni o tutta la
+                provincia) e fino a tre categorie di negozi.
               </p>
               <span className="mt-3 inline-block text-sm font-semibold text-blue-700">
                 Compila il modulo →
