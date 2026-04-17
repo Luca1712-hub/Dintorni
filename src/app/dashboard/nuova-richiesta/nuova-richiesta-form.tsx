@@ -21,7 +21,7 @@ const MAX_IMMAGINI_RICHIESTA = 6;
 const MAX_MB_IMMAGINE = 5;
 
 const PLACEHOLDER_RICHIESTA =
-  "Es.: cerco tavolo da giardino in legno per 4 persone, budget intorno ai 200 euro; oppure: cerco farmacia che faccia consegna a domicilio entro domani sera.";
+  "Es.: scarpe rosse marca xyz numero 44 oppure vestito da donna elegante rosa oppure servizio da 18 piatti quadrati neri";
 
 type ZonaTipo = "gps" | "comune";
 type RaggioKm = 5 | 10 | 15 | 20;
