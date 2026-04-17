@@ -1,14 +1,18 @@
 /** Categorie merceologiche allineate a registrazione negozio e richieste acquirente. */
 export const CATEGORIE_MERCEOLOGICHE = [
-  "Alimentari",
   "Abbigliamento",
-  "Elettronica",
-  "Casa e Arredo",
+  "Calzature",
+  "Articoli sportivi",
+  "Articoli per la casa",
   "Ferramenta",
-  "Sport",
-  "Farmacia e Benessere",
-  "Libri e Cartoleria",
-  "Auto e Moto",
+  "Parafarmacia/Erboristeria",
+  "Libreria/Cartoleria",
+  "Musica",
+  "Giocattoli",
+  "Sanitaria",
+  "Animali",
+  "Ottica",
+  "Enoteca",
 ] as const;
 
 export type CategoriaNegozio = (typeof CATEGORIE_MERCEOLOGICHE)[number];
