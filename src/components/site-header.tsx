@@ -6,9 +6,9 @@ import { SignOutButton } from "./sign-out-button";
 export async function SiteHeader() {
   if (!isSupabaseConfigured()) {
     return (
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/" className="text-lg font-semibold tracking-tight text-slate-900">
+          <Link href="/" className="text-lg font-semibold tracking-tight text-foreground">
             Dintorni
           </Link>
           <p className="text-xs text-amber-800">
@@ -46,39 +46,39 @@ export async function SiteHeader() {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-slate-900">
+        <Link href="/" className="text-lg font-semibold tracking-tight text-foreground">
           Dintorni
         </Link>
 
         {user ? (
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="hidden text-slate-600 sm:inline">
+            <span className="hidden text-muted sm:inline">
               {nome ? (
                 <>
-                  Ciao, <span className="font-medium text-slate-900">{nome}</span>
+                  Ciao, <span className="font-medium text-foreground">{nome}</span>
                   {ruolo ? (
-                    <span className="text-slate-500">
+                    <span className="text-subtle">
                       {" "}
                       · {ruolo === "negozio" ? "Negozio" : "Acquirente"}
                     </span>
                   ) : null}
                 </>
               ) : (
-                <span className="text-slate-600">Account attivo</span>
+                <span className="text-muted">Account attivo</span>
               )}
             </span>
             <nav className="flex flex-wrap items-center gap-2">
               <Link
                 href="/dashboard"
-                className="rounded-md px-3 py-1.5 font-medium text-blue-700 hover:bg-blue-50"
+                className="rounded-md px-3 py-1.5 font-medium text-primary hover:bg-accent/25"
               >
                 Dashboard
               </Link>
               <Link
                 href="/area-personale"
-                className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
+                className="rounded-md px-3 py-1.5 font-medium text-muted hover:bg-surface-muted"
               >
                 Profilo
               </Link>
@@ -89,13 +89,13 @@ export async function SiteHeader() {
           <nav className="flex items-center gap-2 text-sm">
             <Link
               href="/accesso"
-              className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
+              className="rounded-md px-3 py-1.5 font-medium text-muted hover:bg-surface-muted"
             >
               Accedi
             </Link>
             <Link
               href="/registrazione"
-              className="rounded-md bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-700"
+              className="rounded-md bg-primary px-3 py-1.5 font-medium text-white hover:bg-primary-hover"
             >
               Registrati
             </Link>

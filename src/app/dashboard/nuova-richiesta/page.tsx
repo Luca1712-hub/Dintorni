@@ -8,10 +8,10 @@ export const metadata: Metadata = {
 
 export default function NuovaRichiestaPage() {
   return (
-    <main className="flex-1 bg-slate-50 px-4 py-10 text-slate-900 sm:px-6">
+    <main className="flex-1 bg-background px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto max-w-2xl">
-        <p className="text-sm text-slate-600">
-          <Link href="/dashboard" className="font-medium text-blue-700 hover:underline">
+        <p className="text-sm text-muted">
+          <Link href="/dashboard" className="font-medium text-primary hover:underline">
             ← Dashboard
           </Link>
         </p>

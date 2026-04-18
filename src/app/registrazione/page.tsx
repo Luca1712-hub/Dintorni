@@ -204,10 +204,10 @@ export default function RegistrazionePage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
-      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-bold">Registrazione</h1>
-        <p className="mt-2 text-slate-700">
+        <p className="mt-2 text-muted">
           Compila i dati e scegli una password: account e profilo vengono salvati su{" "}
           <strong>Supabase</strong> (database + autenticazione).
         </p>
@@ -227,7 +227,7 @@ export default function RegistrazionePage() {
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
           <div>
             <p className="mb-2 block text-sm font-medium">Ruolo</p>
-            <p className="mb-3 text-sm text-slate-600">
+            <p className="mb-3 text-sm text-muted">
               Scegli prima se ti registri come acquirente o come negozio: in base
               alla scelta compariranno i campi adatti.
             </p>
@@ -264,7 +264,7 @@ export default function RegistrazionePage() {
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
               placeholder="Es. Mario Rossi"
             />
           </div>
@@ -278,7 +278,7 @@ export default function RegistrazionePage() {
                 disabled={caricamento}
                 legend="Provincia e comune (obbligatorio)"
               />
-              <p className="mt-2 text-xs text-slate-600">
+              <p className="mt-2 text-xs text-muted">
                 Indica il comune di riferimento sul territorio (residenza o zona in cui cerchi
                 prodotti e servizi).
               </p>
@@ -299,7 +299,7 @@ export default function RegistrazionePage() {
                   value={nomeNegozio}
                   onChange={(e) => setNomeNegozio(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+                  className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
                   placeholder="Es. Ferramenta Rossi"
                 />
               </div>
@@ -316,10 +316,10 @@ export default function RegistrazionePage() {
                   value={indirizzoNegozio}
                   onChange={(e) => setIndirizzoNegozio(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+                  className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
                   placeholder="Es. Via Roma 12"
                 />
-                <p className="mt-1 text-xs text-slate-600">
+                <p className="mt-1 text-xs text-muted">
                   Il comune non va scritto a mano: sceglilo qui sotto dall&apos;elenco ufficiale.
                 </p>
               </div>
@@ -336,7 +336,7 @@ export default function RegistrazionePage() {
                 <p className="mb-2 block text-sm font-medium">
                   Categorie merceologiche
                 </p>
-                <div className="rounded-lg border border-slate-300 p-3">
+                <div className="rounded-lg border border-border p-3">
                   <div className="grid gap-2 sm:grid-cols-2">
                     {CATEGORIE_MERCEOLOGICHE.map((categoria) => (
                       <label key={categoria} className="flex items-center gap-2">
@@ -372,7 +372,7 @@ export default function RegistrazionePage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
               placeholder="nome@email.it"
             />
           </div>
@@ -389,7 +389,7 @@ export default function RegistrazionePage() {
               required
               minLength={MIN_PASSWORD_LENGTH}
               autoComplete="new-password"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
               placeholder={`Almeno ${MIN_PASSWORD_LENGTH} caratteri`}
             />
           </div>
@@ -409,11 +409,11 @@ export default function RegistrazionePage() {
               required
               minLength={MIN_PASSWORD_LENGTH}
               autoComplete="new-password"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
             />
           </div>
 
-          <div className="space-y-2 rounded-lg bg-slate-100 p-4">
+          <div className="space-y-2 rounded-lg bg-surface-muted p-4">
             <label className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -422,7 +422,7 @@ export default function RegistrazionePage() {
                 className="mt-1"
               />
               <span>
-                Accetto i <Link href="#" className="text-blue-700 underline">Termini e Condizioni</Link>.
+                Accetto i <Link href="#" className="text-primary underline">Termini e Condizioni</Link>.
               </span>
             </label>
             <label className="flex items-start gap-2 text-sm">
@@ -433,7 +433,7 @@ export default function RegistrazionePage() {
                 className="mt-1"
               />
               <span>
-                Accetto la <Link href="#" className="text-blue-700 underline">Privacy Policy</Link>.
+                Accetto la <Link href="#" className="text-primary underline">Privacy Policy</Link>.
               </span>
             </label>
           </div>
@@ -444,14 +444,14 @@ export default function RegistrazionePage() {
           <button
             type="submit"
             disabled={caricamento || !isSupabaseConfigured()}
-            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
           >
             {caricamento ? "Creazione account…" : "Registrati"}
           </button>
 
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-muted">
             Hai gia` un account?{" "}
-            <Link href="/accesso" className="font-semibold text-blue-700 underline">
+            <Link href="/accesso" className="font-semibold text-primary underline">
               Accedi
             </Link>
           </p>

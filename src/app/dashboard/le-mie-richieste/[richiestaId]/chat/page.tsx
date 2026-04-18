@@ -15,15 +15,15 @@ export default async function AcquirenteRichiestaChatPage({ params }: PageProps)
   const { richiestaId } = await params;
 
   return (
-    <main className="flex-1 bg-slate-50 px-4 py-10 text-slate-900 sm:px-6">
+    <main className="flex-1 bg-background px-4 py-10 text-foreground sm:px-6">
       <div className="mx-auto max-w-2xl">
-        <p className="text-sm text-slate-600">
-          <Link href="/dashboard/le-mie-richieste" className="font-medium text-blue-700 hover:underline">
+        <p className="text-sm text-muted">
+          <Link href="/dashboard/le-mie-richieste" className="font-medium text-primary hover:underline">
             ← Le mie richieste
           </Link>
         </p>
         <h1 className="mt-4 text-2xl font-bold">Chat sulla richiesta</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-muted">
           Qui vedi i messaggi dei negozi che rispondono. Puoi scrivere e allegare immagini.
         </p>
         <div className="mt-6">

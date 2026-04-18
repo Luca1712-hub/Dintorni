@@ -291,22 +291,22 @@ export function NuovaRichiestaForm() {
 
   if (!ready) {
     return (
-      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-slate-700">Caricamento…</p>
+      <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <p className="text-muted">Caricamento…</p>
       </div>
     );
   }
 
   if (isAcquirente === false) {
     return (
-      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-bold">Nuova richiesta</h1>
-        <p className="mt-2 text-slate-700">
+        <p className="mt-2 text-muted">
           Questa pagina e` dedicata agli acquirenti. Il tuo account e` registrato come negozio.
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-block rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+          className="mt-6 inline-block rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
         >
           Torna alla dashboard
         </Link>
@@ -315,16 +315,16 @@ export function NuovaRichiestaForm() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
       <h1 className="text-2xl font-bold">Nuova richiesta</h1>
-      <p className="mt-2 text-slate-700">
+      <p className="mt-2 text-muted">
         Descrivi cosa cerchi, dove (intorno a te oppure per provincia e comuni) e a quali categorie
         di negozi inviare la richiesta.
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-8">
         <div>
-          <label htmlFor="testo" className="mb-2 block text-sm font-medium text-slate-900">
+          <label htmlFor="testo" className="mb-2 block text-sm font-medium text-foreground">
             La tua richiesta
           </label>
           <textarea
@@ -333,17 +333,17 @@ export function NuovaRichiestaForm() {
             onChange={(ev) => setTesto(ev.target.value)}
             required
             rows={6}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600"
+            className="w-full rounded-lg border border-border px-3 py-2 text-foreground outline-none placeholder:text-subtle focus:border-primary"
             placeholder={PLACEHOLDER_RICHIESTA}
           />
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-subtle">
             Il testo in grigio chiaro e` solo un suggerimento: scompare quando inizi a scrivere.
           </p>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-slate-900">Foto (facoltativo)</p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="text-sm font-medium text-foreground">Foto (facoltativo)</p>
+          <p className="mt-1 text-xs text-subtle">
             Fino a {MAX_IMMAGINI_RICHIESTA} immagini, max {MAX_MB_IMMAGINE} MB ciascuna. Visibili ai negozi insieme al testo della richiesta.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -358,11 +358,11 @@ export function NuovaRichiestaForm() {
             />
             <label
               htmlFor="richiesta-foto"
-              className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+              className="cursor-pointer rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-muted"
             >
               Scegli foto
             </label>
-            <span className="text-xs text-slate-600">
+            <span className="text-xs text-muted">
               {files.length} / {MAX_IMMAGINI_RICHIESTA}
             </span>
           </div>
@@ -371,7 +371,7 @@ export function NuovaRichiestaForm() {
               {files.map((f, idx) => (
                 <li
                   key={`${f.name}-${idx}`}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-foreground"
                 >
                   <span className="truncate">{f.name}</span>
                   <button
@@ -388,9 +388,9 @@ export function NuovaRichiestaForm() {
         </div>
 
         <fieldset className="space-y-4">
-          <legend className="text-sm font-medium text-slate-900">Dove cercare</legend>
+          <legend className="text-sm font-medium text-foreground">Dove cercare</legend>
 
-          <div className="space-y-3 rounded-lg border border-slate-200 p-4">
+          <div className="space-y-3 rounded-lg border border-border p-4">
             <label className="flex cursor-pointer items-start gap-2">
               <input
                 type="radio"
@@ -401,14 +401,14 @@ export function NuovaRichiestaForm() {
               />
               <span>
                 <span className="font-medium">A partire dalla mia posizione</span>
-                <span className="mt-1 block text-sm text-slate-600">
+                <span className="mt-1 block text-sm text-muted">
                   Useremo il punto in cui ti trovi ora e un raggio in chilometri.
                 </span>
               </span>
             </label>
 
             {zonaTipo === "gps" ? (
-              <div className="ml-6 space-y-3 border-l-2 border-blue-100 pl-4">
+              <div className="ml-6 space-y-3 border-l-2 border-accent/50 pl-4">
                 <div>
                   <label htmlFor="raggio" className="mb-1 block text-sm font-medium">
                     Raggio
@@ -419,7 +419,7 @@ export function NuovaRichiestaForm() {
                     onChange={(ev) =>
                       setRaggioKm(Number(ev.target.value) as RaggioKm)
                     }
-                    className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600 sm:w-auto"
+                    className="w-full max-w-xs rounded-lg border border-border px-3 py-2 outline-none focus:border-primary sm:w-auto"
                   >
                     <option value={5}>5 km</option>
                     <option value={10}>10 km</option>
@@ -432,7 +432,7 @@ export function NuovaRichiestaForm() {
                     type="button"
                     onClick={acquisisciPosizione}
                     disabled={geoStatus === "loading"}
-                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
+                    className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-muted disabled:opacity-60"
                   >
                     {geoStatus === "loading" ? "Acquisizione posizione…" : "Acquisisci posizione"}
                   </button>
@@ -449,7 +449,7 @@ export function NuovaRichiestaForm() {
             ) : null}
           </div>
 
-          <div className="space-y-3 rounded-lg border border-slate-200 p-4">
+          <div className="space-y-3 rounded-lg border border-border p-4">
             <label className="flex cursor-pointer items-start gap-2">
               <input
                 type="radio"
@@ -460,7 +460,7 @@ export function NuovaRichiestaForm() {
               />
               <span>
                 <span className="font-medium">Provincia e comuni (senza GPS)</span>
-                <span className="mt-1 block text-sm text-slate-600">
+                <span className="mt-1 block text-sm text-muted">
                   Scegli la provincia, poi seleziona uno o più comuni in cui cercare, oppure
                   &quot;tutta la provincia&quot;. I negozi vedono la richiesta solo se la loro sede
                   cade nella zona scelta.
@@ -469,8 +469,8 @@ export function NuovaRichiestaForm() {
             </label>
 
             {zonaTipo === "comune" ? (
-              <div className="ml-6 space-y-3 border-l-2 border-blue-100 pl-4">
-                <p className="text-sm font-medium text-slate-900">Zona della richiesta</p>
+              <div className="ml-6 space-y-3 border-l-2 border-accent/50 pl-4">
+                <p className="text-sm font-medium text-foreground">Zona della richiesta</p>
                 <SelettoreProvinciaComuniRichiesta
                   value={zonaComuni}
                   onChange={setZonaComuni}
@@ -482,14 +482,14 @@ export function NuovaRichiestaForm() {
         </fieldset>
 
         <div>
-          <p className="text-sm font-medium text-slate-900">
+          <p className="text-sm font-medium text-foreground">
             Categorie di negozi (max {MAX_CATEGORIE_RICHIESTA})
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-subtle">
             Seleziona da 1 a {MAX_CATEGORIE_RICHIESTA} categorie: la richiesta sara` indirizzata a
             negozi di quel tipo.
           </p>
-          <div className="mt-3 rounded-lg border border-slate-300 p-3">
+          <div className="mt-3 rounded-lg border border-border p-3">
             <div className="grid gap-2 sm:grid-cols-2">
               {CATEGORIE_MERCEOLOGICHE.map((cat) => (
                 <label key={cat} className="flex items-center gap-2 text-sm">
@@ -502,7 +502,7 @@ export function NuovaRichiestaForm() {
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-xs text-slate-600">
+            <p className="mt-2 text-xs text-muted">
               Selezionate: {categorie.length} / {MAX_CATEGORIE_RICHIESTA}
             </p>
           </div>
@@ -514,13 +514,13 @@ export function NuovaRichiestaForm() {
           <button
             type="submit"
             disabled={caricamento}
-            className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
           >
             {caricamento ? "Invio in corso…" : "Invia richiesta"}
           </button>
           <Link
             href="/dashboard"
-            className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-100"
+            className="rounded-lg border border-border px-4 py-2 font-semibold text-muted hover:bg-surface-muted"
           >
             Annulla
           </Link>

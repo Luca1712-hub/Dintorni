@@ -68,9 +68,9 @@ function SelettoreProvinciaComuneInner({
 
   return (
     <div className={`space-y-3 ${disabled ? "pointer-events-none opacity-60" : ""}`}>
-      <p className="text-sm font-medium text-slate-900">{legend}</p>
+      <p className="text-sm font-medium text-foreground">{legend}</p>
       <div>
-        <label htmlFor={idProv} className="mb-1 block text-sm font-medium text-slate-800">
+        <label htmlFor={idProv} className="mb-1 block text-sm font-medium text-foreground">
           Provincia
         </label>
         <select
@@ -78,7 +78,7 @@ function SelettoreProvinciaComuneInner({
           value={siglaProv}
           disabled={disabled}
           onChange={(e) => onProvincia(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600"
+          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
         >
           <option value="">— Scegli la provincia —</option>
           {province.map((p) => (
@@ -89,7 +89,7 @@ function SelettoreProvinciaComuneInner({
         </select>
       </div>
       <div>
-        <label htmlFor={idCom} className="mb-1 block text-sm font-medium text-slate-800">
+        <label htmlFor={idCom} className="mb-1 block text-sm font-medium text-foreground">
           Comune
         </label>
         <select
@@ -97,7 +97,7 @@ function SelettoreProvinciaComuneInner({
           value={codiceComune}
           onChange={(e) => onComune(e.target.value)}
           disabled={disabled || !siglaProv}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 disabled:cursor-not-allowed disabled:bg-slate-100"
+          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-surface-muted"
         >
           <option value="">{siglaProv ? "— Scegli il comune —" : "— Prima la provincia —"}</option>
           {comuni.map((c) => (
@@ -149,7 +149,7 @@ export function SelettoreProvinciaComune({ idPrefix, value, onChange, disabled, 
   }
 
   if (!rows) {
-    return <p className="text-sm text-slate-600">Caricamento elenco comuni italiani…</p>;
+    return <p className="text-sm text-muted">Caricamento elenco comuni italiani…</p>;
   }
 
   return (

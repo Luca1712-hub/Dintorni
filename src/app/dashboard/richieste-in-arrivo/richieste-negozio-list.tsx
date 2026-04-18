@@ -109,22 +109,22 @@ export function RichiesteNegozioList() {
 
   if (!ready) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-slate-700">Caricamento…</p>
+      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <p className="text-muted">Caricamento…</p>
       </div>
     );
   }
 
   if (isNegozio === false) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-bold">Richieste in arrivo</h1>
-        <p className="mt-2 text-slate-700">
+        <p className="mt-2 text-muted">
           Questa sezione e` dedicata ai negozi. Il tuo account e` registrato come acquirente.
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-block rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+          className="mt-6 inline-block rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
         >
           Torna alla dashboard
         </Link>
@@ -139,7 +139,7 @@ export function RichiesteNegozioList() {
         <p className="mt-2 text-sm text-red-800">{loadError}</p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-block rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+          className="mt-6 inline-block rounded-lg border border-border bg-surface px-4 py-2 font-semibold text-muted hover:bg-surface-muted"
         >
           Torna alla dashboard
         </Link>
@@ -149,8 +149,8 @@ export function RichiesteNegozioList() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-        <p className="font-medium text-slate-900">Come funziona il filtro (MVP)</p>
+      <div className="rounded-lg border border-border bg-surface-muted px-4 py-3 text-sm text-muted">
+        <p className="font-medium text-foreground">Come funziona il filtro (MVP)</p>
         <p className="mt-1">
           Vedi solo richieste ancora <strong>aperte</strong> che hanno{" "}
           <strong>almeno una categoria merceologica in comune</strong> con il tuo negozio
@@ -171,20 +171,20 @@ export function RichiesteNegozioList() {
             richieste qui.
           </p>
         ) : (
-          <p className="mt-2 text-xs text-slate-600">
+          <p className="mt-2 text-xs text-muted">
             Categorie del tuo negozio: {categorieNegozio.join(", ")}
           </p>
         )}
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-slate-700">
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
+          <p className="text-muted">
             Nessuna richiesta aperta compatibile con le tue categorie in questo momento.
           </p>
           <Link
             href="/area-personale"
-            className="mt-4 inline-block text-sm font-semibold text-blue-700 underline"
+            className="mt-4 inline-block text-sm font-semibold text-primary underline"
           >
             Controlla categorie e profilo negozio
           </Link>
@@ -198,16 +198,16 @@ export function RichiesteNegozioList() {
             return (
               <li
                 key={r.id}
-                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="rounded-xl border border-border bg-surface p-5 shadow-sm"
               >
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-subtle">
                   Ricevuta il{" "}
                   {new Date(r.created_at).toLocaleString("it-IT", {
                     dateStyle: "short",
                     timeStyle: "short",
                   })}
                 </p>
-                <p className="mt-2 whitespace-pre-wrap text-slate-900">{r.testo}</p>
+                <p className="mt-2 whitespace-pre-wrap text-foreground">{r.testo}</p>
                 {fotoRichiesta.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {fotoRichiesta.map((img) => (
@@ -222,30 +222,30 @@ export function RichiesteNegozioList() {
                         <img
                           src={img.url}
                           alt={img.name ?? "Foto"}
-                          className="h-16 w-16 rounded-md border border-slate-200 object-cover"
+                          className="h-16 w-16 rounded-md border border-border object-cover"
                         />
                       </a>
                     ))}
                   </div>
                 ) : null}
-                <dl className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                <dl className="mt-4 grid gap-2 text-sm text-muted sm:grid-cols-2">
                   <div>
-                    <dt className="font-medium text-slate-800">Zona indicata</dt>
+                    <dt className="font-medium text-foreground">Zona indicata</dt>
                     <dd>{formatoZonaRichiesta(r)}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-800">Categorie richiesta</dt>
+                    <dt className="font-medium text-foreground">Categorie richiesta</dt>
                     <dd>{cats.length ? cats.join(", ") : "—"}</dd>
                   </div>
                 </dl>
                 <div className="mt-4">
                   <Link
                     href={`/dashboard/richieste-in-arrivo/${r.id}/chat`}
-                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
                   >
                     <span>Rispondi in chat</span>
                     {nonLetti > 0 ? (
-                      <span className="rounded-full bg-amber-300 px-2 py-0.5 text-xs font-bold text-slate-900">
+                      <span className="rounded-full bg-amber-300 px-2 py-0.5 text-xs font-bold text-foreground">
                         {nonLetti > 99 ? "99+" : nonLetti}
                       </span>
                     ) : null}

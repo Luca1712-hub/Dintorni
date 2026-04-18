@@ -31,7 +31,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <Suspense
-          fallback={<div className="h-14 shrink-0 border-b border-slate-200 bg-white" aria-hidden />}
+          fallback={<div className="h-14 shrink-0 border-b border-border bg-surface" aria-hidden />}
         >
           <SiteHeader />
         </Suspense>

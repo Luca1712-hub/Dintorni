@@ -124,7 +124,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
 
   if (stato === "non_supportato") {
     return (
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-muted">
         Il browser non supporta le notifiche push (prova Chrome o Edge su desktop, o aggiorna il sistema).
       </p>
     );
@@ -148,7 +148,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
           type="button"
           onClick={() => void registra()}
           disabled={stato === "loading" || !props.abilitato}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
         >
           {stato === "loading" ? "Attendere…" : "Attiva notifiche su questo dispositivo"}
         </button>
@@ -156,7 +156,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
           type="button"
           onClick={() => void disattiva()}
           disabled={stato === "loading"}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-muted disabled:opacity-50"
         >
           Disattiva su questo dispositivo
         </button>
@@ -164,7 +164,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
       {stato === "ok" ? (
         <p className="text-sm font-medium text-emerald-800">{messaggio}</p>
       ) : messaggio ? (
-        <p className="text-sm text-slate-700">{messaggio}</p>
+        <p className="text-sm text-muted">{messaggio}</p>
       ) : null}
     </div>
   );

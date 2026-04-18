@@ -257,12 +257,12 @@ export default function AreaPersonalePage() {
 
   if (!isSupabaseConfigured()) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
           <h1 className="text-2xl font-bold">Supabase non configurato</h1>
-          <p className="mt-2 text-slate-700">
-            Aggiungi le variabili in <code className="rounded bg-slate-100 px-1">.env.local</code>{" "}
-            (vedi <code className="rounded bg-slate-100 px-1">.env.example</code>
+          <p className="mt-2 text-muted">
+            Aggiungi le variabili in <code className="rounded bg-surface-muted px-1">.env.local</code>{" "}
+            (vedi <code className="rounded bg-surface-muted px-1">.env.example</code>
             ) e riavvia il server di sviluppo.
           </p>
         </div>
@@ -272,9 +272,9 @@ export default function AreaPersonalePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <p className="text-slate-700">Caricamento profilo…</p>
+      <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
+          <p className="text-muted">Caricamento profilo…</p>
         </div>
       </main>
     );
@@ -282,22 +282,22 @@ export default function AreaPersonalePage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
           <h1 className="text-2xl font-bold">Accesso richiesto</h1>
-          <p className="mt-2 text-slate-700">
+          <p className="mt-2 text-muted">
             Accedi con email e password oppure crea un nuovo account.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/accesso"
-              className="inline-block rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+              className="inline-block rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
             >
               Accedi
             </Link>
             <Link
               href="/registrazione"
-              className="inline-block rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-100"
+              className="inline-block rounded-lg border border-border px-4 py-2 font-semibold text-muted hover:bg-surface-muted"
             >
               Registrati
             </Link>
@@ -308,11 +308,11 @@ export default function AreaPersonalePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
-      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-bold">Area personale</h1>
-        <p className="mt-2 text-slate-700">
-          Dati del profilo salvati su Supabase (tabella <code className="rounded bg-slate-100 px-1">profiles</code>
+        <p className="mt-2 text-muted">
+          Dati del profilo salvati su Supabase (tabella <code className="rounded bg-surface-muted px-1">profiles</code>
           ).
         </p>
 
@@ -366,28 +366,28 @@ export default function AreaPersonalePage() {
         </dl>
 
         {user.ruolo === "negozio" ? (
-          <section className="mt-8 border-t border-slate-200 pt-6">
-            <h2 className="text-lg font-semibold text-slate-900">Nome e categorie</h2>
-            <p className="mt-1 text-sm text-slate-600">
+          <section className="mt-8 border-t border-border pt-6">
+            <h2 className="text-lg font-semibold text-foreground">Nome e categorie</h2>
+            <p className="mt-1 text-sm text-muted">
               Aggiorna come compare il negozio agli acquirenti e in quali richieste puoi comparire in
               elenco.
             </p>
             <div className="mt-4 space-y-4">
               <div>
-                <label htmlFor="ap-nome-negozio" className="mb-1 block text-sm font-medium text-slate-800">
+                <label htmlFor="ap-nome-negozio" className="mb-1 block text-sm font-medium text-foreground">
                   Nome del negozio
                 </label>
                 <input
                   id="ap-nome-negozio"
                   value={nomeNegozioEdit}
                   onChange={(e) => setNomeNegozioEdit(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-600"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                   placeholder="Es. Ferramenta Rossi"
                 />
               </div>
               <div>
-                <p className="mb-2 block text-sm font-medium text-slate-800">Categorie merceologiche</p>
-                <div className="rounded-lg border border-slate-300 p-3">
+                <p className="mb-2 block text-sm font-medium text-foreground">Categorie merceologiche</p>
+                <div className="rounded-lg border border-border p-3">
                   <div className="grid gap-2 sm:grid-cols-2">
                     {CATEGORIE_MERCEOLOGICHE.map((categoria) => (
                       <label key={categoria} className="flex items-center gap-2 text-sm">
@@ -419,7 +419,7 @@ export default function AreaPersonalePage() {
                 type="button"
                 disabled={salvataggioSchedaNegozio}
                 onClick={() => void salvaSchedaNegozio()}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
               >
                 {salvataggioSchedaNegozio ? "Salvataggio…" : "Salva nome e categorie"}
               </button>
@@ -428,9 +428,9 @@ export default function AreaPersonalePage() {
         ) : null}
 
         {user.ruolo === "acquirente" ? (
-          <section className="mt-8 border-t border-slate-200 pt-6">
-            <h2 className="text-lg font-semibold text-slate-900">Provincia e comune</h2>
-            <p className="mt-1 text-sm text-slate-600">
+          <section className="mt-8 border-t border-border pt-6">
+            <h2 className="text-lg font-semibold text-foreground">Provincia e comune</h2>
+            <p className="mt-1 text-sm text-muted">
               Aggiorna il comune di riferimento sul territorio (come in fase di registrazione).
             </p>
             <div className="mt-4 space-y-4">
@@ -451,7 +451,7 @@ export default function AreaPersonalePage() {
                 type="button"
                 disabled={salvataggioComuneAcquirente}
                 onClick={() => void salvaComuneAcquirente()}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
               >
                 {salvataggioComuneAcquirente ? "Salvataggio…" : "Salva comune"}
               </button>
@@ -460,21 +460,21 @@ export default function AreaPersonalePage() {
         ) : null}
 
         {user.ruolo === "negozio" ? (
-          <section className="mt-8 border-t border-slate-200 pt-6">
-            <h2 className="text-lg font-semibold text-slate-900">Indirizzo del negozio</h2>
-            <p className="mt-1 text-sm text-slate-600">
+          <section className="mt-8 border-t border-border pt-6">
+            <h2 className="text-lg font-semibold text-foreground">Indirizzo del negozio</h2>
+            <p className="mt-1 text-sm text-muted">
               Aggiorna via e civico e scegli di nuovo il comune da elenco (come in registrazione).
             </p>
             <div className="mt-4 space-y-4">
               <div>
-                <label htmlFor="ap-via-negozio" className="mb-1 block text-sm font-medium text-slate-800">
+                <label htmlFor="ap-via-negozio" className="mb-1 block text-sm font-medium text-foreground">
                   Via e numero civico
                 </label>
                 <input
                   id="ap-via-negozio"
                   value={viaNegozioEdit}
                   onChange={(e) => setViaNegozioEdit(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-600"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                   placeholder="Es. Via Roma 12"
                 />
               </div>
@@ -495,7 +495,7 @@ export default function AreaPersonalePage() {
                 type="button"
                 disabled={salvataggioIndirizzo}
                 onClick={() => void salvaIndirizzoNegozio()}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
               >
                 {salvataggioIndirizzo ? "Salvataggio…" : "Salva indirizzo"}
               </button>
@@ -503,48 +503,48 @@ export default function AreaPersonalePage() {
           </section>
         ) : null}
 
-        <section className="mt-8 border-t border-slate-200 pt-6">
-          <h2 className="text-lg font-semibold text-slate-900">Notifiche</h2>
-          <p className="mt-1 text-sm text-slate-600">
+        <section className="mt-8 border-t border-border pt-6">
+          <h2 className="text-lg font-semibold text-foreground">Notifiche</h2>
+          <p className="mt-1 text-sm text-muted">
             Quando ricevi un messaggio in chat, possiamo avvisarti per email e (se lo attivi sul
             dispositivo) con una notifica del browser.
           </p>
           <div className="mt-4 space-y-3">
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-800">
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
               <input
                 type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-slate-300"
+                className="mt-0.5 h-4 w-4 rounded border-border"
                 checked={user.notificheEmail}
                 disabled={salvataggioNotifiche}
                 onChange={(e) => void aggiornaPreferenzaNotifiche("notifiche_email", e.target.checked)}
               />
               <span>
                 <span className="font-medium">Email</span>
-                <span className="block text-slate-600">
+                <span className="block text-muted">
                   Invia un&apos;email quando arriva un nuovo messaggio (serve{" "}
-                  <code className="rounded bg-slate-100 px-1 text-xs">RESEND_API_KEY</code> sul server).
+                  <code className="rounded bg-surface-muted px-1 text-xs">RESEND_API_KEY</code> sul server).
                 </span>
               </span>
             </label>
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-800">
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
               <input
                 type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-slate-300"
+                className="mt-0.5 h-4 w-4 rounded border-border"
                 checked={user.notifichePush}
                 disabled={salvataggioNotifiche}
                 onChange={(e) => void aggiornaPreferenzaNotifiche("notifiche_push", e.target.checked)}
               />
               <span>
                 <span className="font-medium">Notifiche push</span>
-                <span className="block text-slate-600">
+                <span className="block text-muted">
                   Consenti l&apos;invio tramite Web Push (puoi attivare il dispositivo qui sotto).
                 </span>
               </span>
             </label>
           </div>
-          <div className="mt-5 rounded-lg border border-slate-100 bg-slate-50/80 p-4">
-            <p className="text-sm font-medium text-slate-800">Questo dispositivo</p>
-            <p className="mt-1 text-xs text-slate-600">
+          <div className="mt-5 rounded-lg border border-border bg-surface-muted/80 p-4">
+            <p className="text-sm font-medium text-foreground">Questo dispositivo</p>
+            <p className="mt-1 text-xs text-muted">
               Chrome o Edge consigliati. Su iOS le notifiche web hanno limitazioni note.
             </p>
             <div className="mt-3">
@@ -556,13 +556,13 @@ export default function AreaPersonalePage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/dashboard"
-            className="inline-block rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+            className="inline-block rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
           >
             Dashboard
           </Link>
           <Link
             href="/"
-            className="inline-block rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-100"
+            className="inline-block rounded-lg border border-border px-4 py-2 font-semibold text-muted hover:bg-surface-muted"
           >
             Home
           </Link>
@@ -579,7 +579,7 @@ export default function AreaPersonalePage() {
               router.push("/accesso");
               router.refresh();
             }}
-            className="rounded-lg bg-slate-200 px-4 py-2 font-semibold text-slate-800 hover:bg-slate-300"
+            className="rounded-lg bg-accent/40 px-4 py-2 font-semibold text-foreground hover:bg-accent/55"
           >
             Esci
           </button>

@@ -23,7 +23,7 @@ export function SignOutButton() {
         router.push("/");
         router.refresh();
       }}
-      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+      className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface-muted disabled:opacity-50"
     >
       {pending ? "Uscita…" : "Esci"}
     </button>

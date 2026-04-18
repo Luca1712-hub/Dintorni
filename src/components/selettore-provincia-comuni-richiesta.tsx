@@ -100,7 +100,7 @@ export function SelettoreProvinciaComuniRichiesta({ value, onChange, disabled }:
   }
 
   if (!rows) {
-    return <p className="text-sm text-slate-600">Caricamento elenco comuni italiani…</p>;
+    return <p className="text-sm text-muted">Caricamento elenco comuni italiani…</p>;
   }
 
   const idProv = "richiesta-zona-provincia";
@@ -109,7 +109,7 @@ export function SelettoreProvinciaComuniRichiesta({ value, onChange, disabled }:
   return (
     <div className={`space-y-4 ${disabled ? "pointer-events-none opacity-60" : ""}`}>
       <div>
-        <label htmlFor={idProv} className="mb-1 block text-sm font-medium text-slate-800">
+        <label htmlFor={idProv} className="mb-1 block text-sm font-medium text-foreground">
           Provincia
         </label>
         <select
@@ -117,7 +117,7 @@ export function SelettoreProvinciaComuniRichiesta({ value, onChange, disabled }:
           value={value.provinciaSigla}
           disabled={disabled}
           onChange={(e) => onProvincia(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600"
+          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
         >
           <option value="">— Scegli la provincia —</option>
           {province.map((p) => (
@@ -129,8 +129,8 @@ export function SelettoreProvinciaComuniRichiesta({ value, onChange, disabled }:
       </div>
 
       {value.provinciaSigla ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
-          <label htmlFor={idTutta} className="flex cursor-pointer items-start gap-2 text-sm text-slate-900">
+        <div className="rounded-lg border border-border bg-surface-muted/80 p-3">
+          <label htmlFor={idTutta} className="flex cursor-pointer items-start gap-2 text-sm text-foreground">
             <input
               id={idTutta}
               type="checkbox"
@@ -141,7 +141,7 @@ export function SelettoreProvinciaComuniRichiesta({ value, onChange, disabled }:
             />
             <span>
               <span className="font-medium">Cerca in tutti i comuni della provincia</span>
-              <span className="mt-0.5 block text-xs font-normal text-slate-600">
+              <span className="mt-0.5 block text-xs font-normal text-muted">
                 La richiesta sarà visibile ai negozi situati in qualsiasi comune della provincia
                 selezionata.
               </span>
@@ -152,21 +152,21 @@ export function SelettoreProvinciaComuniRichiesta({ value, onChange, disabled }:
 
       {value.provinciaSigla && !value.tuttaProvincia ? (
         <div>
-          <p className="mb-2 text-sm font-medium text-slate-900">
+          <p className="mb-2 text-sm font-medium text-foreground">
             Comuni in cui cercare
-            <span className="ml-2 font-normal text-slate-600">
+            <span className="ml-2 font-normal text-muted">
               ({value.comuniLabels.length} / {MAX_COMUNI_RICHIESTA})
             </span>
           </p>
-          <p className="mb-2 text-xs text-slate-600">
+          <p className="mb-2 text-xs text-muted">
             Seleziona uno o più comuni. Solo i negozi con sede in uno di questi comuni vedranno la
             richiesta.
           </p>
-          <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-300 bg-white p-2">
+          <div className="max-h-64 overflow-y-auto rounded-lg border border-border bg-surface p-2">
             <ul className="space-y-1">
               {comuniInProvincia.map((c) => (
                 <li key={c.codice}>
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-slate-50">
+                  <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-surface-muted">
                     <input
                       type="checkbox"
                       checked={value.comuniLabels.includes(c.label)}

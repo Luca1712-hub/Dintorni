@@ -31,15 +31,15 @@ export default async function Home() {
   }
 
   return (
-    <main className="flex-1 bg-slate-50 px-4 py-10 text-slate-900 sm:px-6">
-      <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-600">
+    <main className="flex-1 bg-background px-4 py-10 text-foreground sm:px-6">
+      <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-primary">
           Dintorni MVP
         </p>
         <h1 className="text-3xl font-bold tracking-tight">
           {loggedIn && nome ? `Ciao, ${nome}` : "Benvenuto in Dintorni MVP"}
         </h1>
-        <p className="mt-4 text-base leading-7 text-slate-700">
+        <p className="mt-4 text-base leading-7 text-muted">
           {loggedIn ? (
             <>
               {ruolo === "negozio" ? (
@@ -67,13 +67,13 @@ export default async function Home() {
             <>
               <Link
                 href="/dashboard"
-                className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                className="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
               >
                 Vai alla dashboard
               </Link>
               <Link
                 href="/area-personale"
-                className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-100"
+                className="rounded-lg border border-border px-4 py-2 font-semibold text-muted hover:bg-surface-muted"
               >
                 Area personale
               </Link>
@@ -82,13 +82,13 @@ export default async function Home() {
             <>
               <Link
                 href="/registrazione"
-                className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                className="rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
               >
                 Registrati
               </Link>
               <Link
                 href="/accesso"
-                className="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-100"
+                className="rounded-lg border border-border px-4 py-2 font-semibold text-muted hover:bg-surface-muted"
               >
                 Accedi
               </Link>

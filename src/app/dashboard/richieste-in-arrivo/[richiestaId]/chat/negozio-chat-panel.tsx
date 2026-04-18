@@ -276,8 +276,8 @@ export function NegozioChatPanel({ richiestaId }: Props) {
 
   if (!ready && !error) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-slate-700">Preparazione chat…</p>
+      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <p className="text-muted">Preparazione chat…</p>
       </div>
     );
   }
@@ -288,7 +288,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
         <p className="text-sm text-red-800">{error}</p>
         <Link
           href="/dashboard/richieste-in-arrivo"
-          className="mt-4 inline-block text-sm font-semibold text-blue-700 underline"
+          className="mt-4 inline-block text-sm font-semibold text-primary underline"
         >
           Torna alle richieste
         </Link>
@@ -297,13 +297,13 @@ export function NegozioChatPanel({ richiestaId }: Props) {
   }
 
   return (
-    <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex flex-col rounded-2xl border border-border bg-surface shadow-sm">
       {richiestaTesto || richiestaAllegati.length > 0 ? (
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="border-b border-border bg-surface-muted px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-subtle">
             Richiesta dell&apos;acquirente
           </p>
-          {richiestaTesto ? <p className="mt-1 text-sm text-slate-800">{richiestaTesto}</p> : null}
+          {richiestaTesto ? <p className="mt-1 text-sm text-foreground">{richiestaTesto}</p> : null}
           {richiestaAllegati.length > 0 ? (
             <div className="mt-2 flex flex-wrap gap-2">
               {richiestaAllegati.map((img) => (
@@ -318,7 +318,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
                   <img
                     src={img.url}
                     alt={img.name ?? "Foto richiesta"}
-                    className="max-h-40 max-w-[200px] rounded-lg border border-slate-200 object-cover"
+                    className="max-h-40 max-w-[200px] rounded-lg border border-border object-cover"
                   />
                 </a>
               ))}
@@ -338,7 +338,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
 
       <div className="max-h-[50vh] min-h-[200px] space-y-3 overflow-y-auto px-4 py-4">
         {messaggi.length === 0 ? (
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-subtle">
             Nessun messaggio ancora. Saluta l&apos;acquirente o rispondi usando le frasi rapide sotto.
           </p>
         ) : (
@@ -354,10 +354,10 @@ export function NegozioChatPanel({ richiestaId }: Props) {
                 <div
                   className={
                     miei
-                      ? "max-w-[85%] rounded-2xl rounded-br-md bg-blue-600 px-3 py-2 text-white"
+                      ? "max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3 py-2 text-white"
                       : nuovo
-                        ? "max-w-[85%] rounded-2xl rounded-bl-md border-2 border-amber-400 bg-amber-50/90 px-3 py-2 text-slate-900 shadow-sm"
-                        : "max-w-[85%] rounded-2xl rounded-bl-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900"
+                        ? "max-w-[85%] rounded-2xl rounded-bl-md border-2 border-amber-400 bg-amber-50/90 px-3 py-2 text-foreground shadow-sm"
+                        : "max-w-[85%] rounded-2xl rounded-bl-md border border-border bg-surface-muted px-3 py-2 text-foreground"
                   }
                 >
                   {m.testo.trim() ? (
@@ -386,10 +386,10 @@ export function NegozioChatPanel({ richiestaId }: Props) {
                   <p
                     className={
                       miei
-                        ? "mt-1 text-right text-[10px] text-blue-100"
+                        ? "mt-1 text-right text-[10px] text-white/85"
                         : nuovo
                           ? "mt-1 flex items-center justify-end gap-1 text-right text-[10px] font-medium text-amber-900"
-                          : "mt-1 text-right text-[10px] text-slate-500"
+                          : "mt-1 text-right text-[10px] text-subtle"
                     }
                   >
                     {nuovo && !miei ? (
@@ -412,8 +412,8 @@ export function NegozioChatPanel({ richiestaId }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-slate-200 bg-slate-50 px-4 py-3">
-        <p className="mb-2 text-xs font-medium text-slate-600">Frasi rapide (inserite nel messaggio)</p>
+      <div className="border-t border-border bg-surface-muted px-4 py-3">
+        <p className="mb-2 text-xs font-medium text-muted">Frasi rapide (inserite nel messaggio)</p>
         <div className="flex flex-wrap gap-2">
           {RISPOSTE_PREDEFINITE_NEGOZIO.map((f) => (
             <button
@@ -421,7 +421,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
               type="button"
               disabled={richiestaChiusa}
               onClick={() => inserisciPredefinita(f)}
-              className="rounded-full border border-slate-300 bg-white px-3 py-1 text-left text-xs text-slate-800 hover:border-blue-400 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-border bg-surface px-3 py-1 text-left text-xs text-foreground hover:border-accent hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {f.length > 48 ? `${f.slice(0, 48)}…` : f}
             </button>
@@ -429,7 +429,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
         </div>
       </div>
 
-      <div className="space-y-2 border-t border-slate-200 p-4">
+      <div className="space-y-2 border-t border-border p-4">
         {files.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {anteprimaFiles.map((x, idx) => (
@@ -438,12 +438,12 @@ export function NegozioChatPanel({ richiestaId }: Props) {
                 <img
                   src={x.url}
                   alt=""
-                  className="h-20 w-20 rounded-lg border border-slate-200 object-cover"
+                  className="h-20 w-20 rounded-lg border border-border object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => rimuoviFile(idx)}
-                  className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-xs text-white hover:bg-slate-900"
+                  className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs text-white hover:bg-foreground/90"
                   aria-label="Rimuovi immagine"
                 >
                   ×
@@ -458,7 +458,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
           onChange={(e) => setTesto(e.target.value)}
           rows={3}
           disabled={richiestaChiusa}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-subtle"
           placeholder="Scrivi la tua risposta all'acquirente…"
         />
 
@@ -475,7 +475,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
             type="button"
             disabled={richiestaChiusa}
             onClick={() => fileInputRef.current?.click()}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
             Allega immagini ({files.length}/{MAX_IMMAGINI}, max {MAX_MB} MB cad.)
           </button>
@@ -483,7 +483,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
             type="button"
             disabled={invio || richiestaChiusa}
             onClick={() => void invia()}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
           >
             {invio ? "Invio…" : "Invia"}
           </button>

@@ -60,10 +60,10 @@ export default function AccessoPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
-      <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <main className="min-h-screen bg-background px-6 py-12 text-foreground">
+      <div className="mx-auto max-w-md rounded-2xl border border-border bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-bold">Accedi</h1>
-        <p className="mt-2 text-slate-700">
+        <p className="mt-2 text-muted">
           Inserisci email e password del tuo account Supabase.
         </p>
 
@@ -89,7 +89,7 @@ export default function AccessoPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
               placeholder="nome@email.it"
             />
           </div>
@@ -105,7 +105,7 @@ export default function AccessoPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-600"
+              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
             />
           </div>
 
@@ -114,15 +114,15 @@ export default function AccessoPage() {
           <button
             type="submit"
             disabled={caricamento || !isSupabaseConfigured()}
-            className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            className="w-full rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
           >
             {caricamento ? "Accesso in corso…" : "Entra"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-sm text-muted">
           Non hai un account?{" "}
-          <Link href="/registrazione" className="font-semibold text-blue-700 underline">
+          <Link href="/registrazione" className="font-semibold text-primary underline">
             Registrati
           </Link>
         </p>

@@ -150,22 +150,22 @@ export function LeMieRichiesteList() {
 
   if (!ready) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-slate-700">Caricamento…</p>
+      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
+        <p className="text-muted">Caricamento…</p>
       </div>
     );
   }
 
   if (isAcquirente === false) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
         <h1 className="text-2xl font-bold">Le mie richieste</h1>
-        <p className="mt-2 text-slate-700">
+        <p className="mt-2 text-muted">
           Questa sezione e` riservata agli acquirenti. Il tuo account e` registrato come negozio.
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-block rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+          className="mt-6 inline-block rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
         >
           Torna alla dashboard
         </Link>
@@ -180,7 +180,7 @@ export function LeMieRichiesteList() {
         <p className="mt-2 text-sm text-red-800">{loadError}</p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-block rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+          className="mt-6 inline-block rounded-lg border border-border bg-surface px-4 py-2 font-semibold text-muted hover:bg-surface-muted"
         >
           Torna alla dashboard
         </Link>
@@ -197,11 +197,11 @@ export function LeMieRichiesteList() {
       ) : null}
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-slate-700">Non hai ancora inviato richieste.</p>
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
+          <p className="text-muted">Non hai ancora inviato richieste.</p>
           <Link
             href="/dashboard/nuova-richiesta"
-            className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+            className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
           >
             Crea la prima richiesta
           </Link>
@@ -218,7 +218,7 @@ export function LeMieRichiesteList() {
             return (
               <li
                 key={r.id}
-                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="rounded-xl border border-border bg-surface p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -226,12 +226,12 @@ export function LeMieRichiesteList() {
                       className={
                         aperta
                           ? "inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900"
-                          : "inline-block rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-700"
+                          : "inline-block rounded-full bg-accent/40 px-2.5 py-0.5 text-xs font-semibold text-muted"
                       }
                     >
                       {aperta ? "Aperta" : "Chiusa"}
                     </span>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-subtle">
                       Creata il{" "}
                       {new Date(r.created_at).toLocaleString("it-IT", {
                         dateStyle: "short",
@@ -264,14 +264,14 @@ export function LeMieRichiesteList() {
                         }
                         void chiudiRichiesta(r.id);
                       }}
-                      className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                      className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-surface-muted disabled:opacity-50"
                     >
                       {closingId === r.id ? "Chiusura…" : "Chiudi richiesta"}
                     </button>
                   ) : null}
                 </div>
 
-                <p className="mt-3 whitespace-pre-wrap text-slate-900">{r.testo}</p>
+                <p className="mt-3 whitespace-pre-wrap text-foreground">{r.testo}</p>
                 {fotoRichiesta.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {fotoRichiesta.map((img) => (
@@ -286,20 +286,20 @@ export function LeMieRichiesteList() {
                         <img
                           src={img.url}
                           alt={img.name ?? "Foto"}
-                          className="h-16 w-16 rounded-md border border-slate-200 object-cover"
+                          className="h-16 w-16 rounded-md border border-border object-cover"
                         />
                       </a>
                     ))}
                   </div>
                 ) : null}
 
-                <dl className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                <dl className="mt-4 grid gap-2 text-sm text-muted sm:grid-cols-2">
                   <div>
-                    <dt className="font-medium text-slate-800">Zona</dt>
+                    <dt className="font-medium text-foreground">Zona</dt>
                     <dd>{formatoZonaRichiesta(r)}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-800">Categorie</dt>
+                    <dt className="font-medium text-foreground">Categorie</dt>
                     <dd>{cats.length ? cats.join(", ") : "—"}</dd>
                   </div>
                 </dl>
@@ -307,7 +307,7 @@ export function LeMieRichiesteList() {
                 <div className="mt-4">
                   <Link
                     href={`/dashboard/le-mie-richieste/${r.id}/chat`}
-                    className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-800 hover:bg-blue-100"
+                    className="inline-flex items-center gap-2 rounded-lg border border-accent/45 bg-accent/20 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-accent/30"
                   >
                     <span>Apri chat</span>
                     {nonLetti > 0 ? (
