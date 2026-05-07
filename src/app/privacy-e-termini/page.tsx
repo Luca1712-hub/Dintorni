@@ -24,16 +24,6 @@ export default function PrivacyETerminiPage() {
         <h1 className="mt-6 text-3xl font-bold tracking-tight">Privacy e Termini di utilizzo</h1>
         <p className="mt-2 text-muted">Versione registrata nell&apos;app: Termini <strong>v1</strong>, Privacy <strong>v1</strong>.</p>
 
-        <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/90 p-4 text-sm text-amber-950">
-          <p className="font-semibold">Nota</p>
-          <p className="mt-1 leading-relaxed">
-            Le <strong>condizioni d&apos;uso</strong> riflettono il testo comunicato dal titolare. La{" "}
-            <strong>Privacy Policy</strong> individua il titolare come persona fisica (Luca Petrù) e illustra uso di
-            Vercel, Supabase ed eventuale Wix: resta comunque un testo <strong>tipo</strong> da adattare se aggiungi
-            strumenti di tracciamento e da far eventualmente controllare da un <strong>professionista</strong>.
-          </p>
-        </div>
-
         <nav className="mt-8 flex flex-wrap gap-4 border-b border-border pb-6 text-sm font-semibold">
           <a href="#termini" className="text-primary underline underline-offset-4 hover:text-primary-hover">
             Termini e condizioni

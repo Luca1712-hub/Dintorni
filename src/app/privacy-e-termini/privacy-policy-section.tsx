@@ -1,21 +1,9 @@
 /**
- * Privacy Policy v1 — titolare persona fisica (Luca Petrù), modello GDPR Italia.
- * Adattare cookie/strumenti se cambia l’implementazione; revisione legale consigliabile.
+ * Privacy Policy v1 — titolare persona fisica (Luca Petrù).
  */
 export function PrivacyPolicySection() {
   return (
     <div className="mt-6 space-y-6 text-sm leading-relaxed text-foreground">
-      <div className="rounded-lg border border-sky-200 bg-sky-50/90 p-4 text-sky-950">
-        <p className="font-semibold">Attenzione</p>
-        <p className="mt-1">
-          Questo testo è un <strong>modello suggerito</strong> per un servizio tipo Dintorni con hosting su{" "}
-          <strong>Vercel</strong>, dati/auth/storage su <strong>Supabase</strong> ed eventualmente <strong>Wix</strong>. Il
-          titolare è qui indicato nella qualità di <strong>persona fisica</strong> (non è costituita una società). Non
-          sostituisce un parere legale: fate verificare eventuali adempimenti specifici (cookie, marketing, minori) se
-          pertinenti.
-        </p>
-      </div>
-
       <p>
         Ai sensi dell&apos;<strong>art. 13 del Regolamento (UE) 2016/679</strong> (&quot;GDPR&quot;) e delle disposizioni
         applicabili in materia di protezione dei dati personali in Italia, il titolare del trattamento fornisce le
