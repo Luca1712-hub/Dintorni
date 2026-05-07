@@ -13,6 +13,7 @@ import { SelettoreProvinciaComune } from "@/components/selettore-provincia-comun
 import { CATEGORIE_MERCEOLOGICHE } from "@/lib/categorie-negozio";
 import { geocodeViaEComune } from "@/lib/geocode-negozio-client";
 import { joinIndirizzoNegozio, splitIndirizzoNegozio } from "@/lib/indirizzo-negozio";
+import { FRASE_ELIMINAZIONE_ACCOUNT, confermaEliminazioneAccount } from "@/lib/account-delete-confirm";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -38,6 +39,11 @@ export default function AreaPersonalePage() {
   const [salvataggioComuneAcquirente, setSalvataggioComuneAcquirente] = useState(false);
   const [msgComuneAcquirente, setMsgComuneAcquirente] = useState("");
   const [errComuneAcquirente, setErrComuneAcquirente] = useState("");
+
+  const [eliminaIrreversibile, setEliminaIrreversibile] = useState(false);
+  const [eliminaFrase, setEliminaFrase] = useState("");
+  const [eliminaInCorso, setEliminaInCorso] = useState(false);
+  const [eliminaErr, setEliminaErr] = useState("");
 
   const loadProfile = useCallback(async () => {
     if (!isSupabaseConfigured()) {
@@ -254,6 +260,52 @@ export default function AreaPersonalePage() {
     },
     [user],
   );
+
+  const eliminaAccount = useCallback(async () => {
+    setEliminaErr("");
+    if (!eliminaIrreversibile) {
+      setEliminaErr("Segna la casella di conferma per procedere.");
+      return;
+    }
+    if (!confermaEliminazioneAccount(eliminaFrase)) {
+      setEliminaErr(`Digita esattamente: ${FRASE_ELIMINAZIONE_ACCOUNT}`);
+      return;
+    }
+    setEliminaInCorso(true);
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accetto_irreversibile: true,
+          confirm: eliminaFrase.trim(),
+        }),
+      });
+      const data: unknown = await res.json().catch(() => ({}));
+      const msg =
+        typeof data === "object" && data !== null && "error" in data && typeof (data as { error: unknown }).error === "string"
+          ? (data as { error: string }).error
+          : null;
+      if (!res.ok) {
+        setEliminaErr(msg ?? "Non è stato possibile eliminare l’account.");
+        return;
+      }
+      try {
+        const supabase = createBrowserSupabaseClient();
+        await supabase.auth.signOut();
+      } catch {
+        // sessione già invalidata lato server
+      }
+      setUser(null);
+      router.push("/accesso");
+      router.refresh();
+    } catch {
+      setEliminaErr("Errore di rete. Riprova.");
+    } finally {
+      setEliminaInCorso(false);
+    }
+  }, [eliminaFrase, eliminaIrreversibile, router]);
 
   if (!isSupabaseConfigured()) {
     return (
@@ -550,6 +602,60 @@ export default function AreaPersonalePage() {
             <div className="mt-3">
               <NotifichePushSetup abilitato={user.notifichePush} />
             </div>
+          </div>
+        </section>
+
+        <section className="mt-8 border-t border-border pt-6">
+          <h2 className="text-lg font-semibold text-red-800">Elimina account</h2>
+          <p className="mt-2 text-sm text-muted">
+            Per <strong className="font-medium text-foreground">acquirenti</strong> e{" "}
+            <strong className="font-medium text-foreground">negozianti</strong>: la cancellazione è
+            definitiva. Vengono eliminati profilo, preferenze di notifica, iscrizioni push e — a seconda
+            del ruolo — le tue richieste o le conversazioni e i messaggi collegati al tuo negozio.
+            Anche le <strong className="font-medium text-foreground">foto e gli allegati</strong> che
+            hai caricato vengono rimossi dallo storage. Non potrai recuperare questi dati.
+          </p>
+          <div className="mt-4 space-y-4 rounded-lg border border-red-200 bg-red-50/80 p-4">
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-border"
+                checked={eliminaIrreversibile}
+                disabled={eliminaInCorso}
+                onChange={(e) => setEliminaIrreversibile(e.target.checked)}
+              />
+              <span>
+                Ho compreso che l&apos;operazione è <strong className="font-medium">irreversibile</strong>
+                .
+              </span>
+            </label>
+            <div>
+              <label htmlFor="ap-elimina-frase" className="mb-1 block text-sm font-medium text-foreground">
+                Per confermare, digita:{" "}
+                <span className="font-mono text-xs text-muted">{FRASE_ELIMINAZIONE_ACCOUNT}</span>
+              </label>
+              <input
+                id="ap-elimina-frase"
+                type="text"
+                autoComplete="off"
+                value={eliminaFrase}
+                disabled={eliminaInCorso}
+                onChange={(e) => setEliminaFrase(e.target.value)}
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary"
+                placeholder={FRASE_ELIMINAZIONE_ACCOUNT}
+              />
+            </div>
+            {eliminaErr ? <p className="text-sm font-medium text-red-700">{eliminaErr}</p> : null}
+            <button
+              type="button"
+              disabled={
+                eliminaInCorso || !eliminaIrreversibile || !confermaEliminazioneAccount(eliminaFrase)
+              }
+              onClick={() => void eliminaAccount()}
+              className="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50"
+            >
+              {eliminaInCorso ? "Eliminazione…" : "Elimina definitivamente il mio account"}
+            </button>
           </div>
         </section>
 
