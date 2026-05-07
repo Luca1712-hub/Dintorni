@@ -422,7 +422,16 @@ export default function RegistrazionePage() {
                 className="mt-1"
               />
               <span>
-                Accetto i <Link href="#" className="text-primary underline">Termini e Condizioni</Link>.
+                Accetto i{" "}
+                <Link
+                  href="/privacy-e-termini#termini"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
+                  Termini e Condizioni
+                </Link>
+                .
               </span>
             </label>
             <label className="flex items-start gap-2 text-sm">
@@ -433,7 +442,16 @@ export default function RegistrazionePage() {
                 className="mt-1"
               />
               <span>
-                Accetto la <Link href="#" className="text-primary underline">Privacy Policy</Link>.
+                Accetto la{" "}
+                <Link
+                  href="/privacy-e-termini#privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
+                  Privacy Policy
+                </Link>
+                .
               </span>
             </label>
           </div>
