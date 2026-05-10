@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import webpush from "web-push";
 import { createServiceSupabaseClient } from "@/lib/supabase/admin";
+import { isOnesignalPushConfigured } from "@/lib/onesignal/env";
+import { sendOnesignalPushToUser } from "@/lib/onesignal/send-push";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -111,7 +113,6 @@ export async function POST(request: Request) {
   const pushOn = profilo.notifiche_push !== false;
 
   let emailInviata = false;
-  let pushInviati = 0;
 
   const resendKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.RESEND_FROM_EMAIL || "Dintorni <onboarding@resend.dev>";
@@ -141,42 +142,66 @@ export async function POST(request: Request) {
     }
   }
 
-  const publicVapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privateVapid = process.env.VAPID_PRIVATE_KEY;
-  const vapidMailto = process.env.VAPID_MAILTO || "mailto:notify@dintorni.app";
+  let pushInviati = 0;
+  let skippedPushReason: "off" | "none" | undefined;
 
-  if (pushOn && publicVapid && privateVapid) {
-    webpush.setVapidDetails(vapidMailto, publicVapid, privateVapid);
+  if (!pushOn) {
+    skippedPushReason = "off";
+  } else if (isOnesignalPushConfigured()) {
+    try {
+      const ok = await sendOnesignalPushToUser({
+        externalUserId: destinatarioId,
+        title: "Nuovo messaggio — Dintorni",
+        body: anteprima,
+        url: chatUrl,
+      });
+      pushInviati = ok ? 1 : 0;
+      if (!ok) skippedPushReason = "none";
+    } catch (e) {
+      console.error("[notify-message] OneSignal", e);
+      skippedPushReason = "none";
+    }
+  } else {
+    const publicVapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const privateVapid = process.env.VAPID_PRIVATE_KEY;
+    const vapidMailto = process.env.VAPID_MAILTO || "mailto:notify@dintorni.app";
 
-    const { data: subs } = await supabase
-      .from("push_subscriptions")
-      .select("endpoint, p256dh, auth")
-      .eq("user_id", destinatarioId);
+    if (publicVapid && privateVapid) {
+      webpush.setVapidDetails(vapidMailto, publicVapid, privateVapid);
 
-    const payload = JSON.stringify({
-      title: "Nuovo messaggio — Dintorni",
-      body: anteprima,
-      url: chatUrl,
-    });
+      const { data: subs } = await supabase
+        .from("push_subscriptions")
+        .select("endpoint, p256dh, auth")
+        .eq("user_id", destinatarioId);
 
-    for (const s of subs ?? []) {
-      if (!s.endpoint || !s.p256dh || !s.auth) continue;
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: s.endpoint,
-            keys: { p256dh: s.p256dh, auth: s.auth },
-          },
-          payload,
-        );
-        pushInviati += 1;
-      } catch (err) {
-        console.error("[notify-message] webpush", err);
-        const status = (err as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410) {
-          await supabase.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
+      const payload = JSON.stringify({
+        title: "Nuovo messaggio — Dintorni",
+        body: anteprima,
+        url: chatUrl,
+      });
+
+      for (const s of subs ?? []) {
+        if (!s.endpoint || !s.p256dh || !s.auth) continue;
+        try {
+          await webpush.sendNotification(
+            {
+              endpoint: s.endpoint,
+              keys: { p256dh: s.p256dh, auth: s.auth },
+            },
+            payload,
+          );
+          pushInviati += 1;
+        } catch (err) {
+          console.error("[notify-message] webpush", err);
+          const status = (err as { statusCode?: number }).statusCode;
+          if (status === 404 || status === 410) {
+            await supabase.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
+          }
         }
       }
+      if (pushInviati === 0 && (subs?.length ?? 0) === 0) skippedPushReason = "none";
+    } else {
+      skippedPushReason = "none";
     }
   }
 
@@ -185,6 +210,6 @@ export async function POST(request: Request) {
     email: emailInviata,
     push: pushInviati,
     skippedEmail: !emailOn || !resendKey,
-    skippedPush: !pushOn || !publicVapid || !privateVapid,
+    skippedPush: Boolean(skippedPushReason),
   });
 }

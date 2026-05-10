@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import OneSignal from "react-onesignal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { ensureOneSignalInit, isOnesignalClientConfigured } from "@/lib/onesignal/client-init";
 import { urlBase64ToVapidKeyBuffer } from "@/lib/push-client";
 
 type Stato = "idle" | "loading" | "ok" | "err" | "non_supportato" | "no_key";
@@ -10,16 +12,75 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
   const [stato, setStato] = useState<Stato>("idle");
   const [messaggio, setMessaggio] = useState("");
 
+  const onesignalMode = isOnesignalClientConfigured();
   const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!("Notification" in window)) {
+      setStato("non_supportato");
+      return;
+    }
+    if (onesignalMode) return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setStato("non_supportato");
     }
+  }, [onesignalMode]);
+
+  /** --- OneSignal -------------------------------------------------------- */
+  const registraOnesignal = useCallback(async () => {
+    setMessaggio("");
+    if (!props.abilitato) {
+      setMessaggio("Attiva prima «Notifiche push» nella sezione sotto.");
+      return;
+    }
+    setStato("loading");
+    try {
+      await ensureOneSignalInit();
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setStato("err");
+        setMessaggio("Devi essere connesso.");
+        return;
+      }
+
+      await OneSignal.login(user.id);
+      const ok = await OneSignal.Notifications.requestPermission();
+      if (!ok) {
+        setStato("err");
+        setMessaggio("Permesso notifiche negato dal browser.");
+        return;
+      }
+
+      await OneSignal.User.PushSubscription.optIn();
+
+      setStato("ok");
+      setMessaggio("Notifiche push (OneSignal) attive su questo dispositivo.");
+    } catch (e) {
+      setStato("err");
+      setMessaggio(e instanceof Error ? e.message : "Errore durante la registrazione OneSignal.");
+    }
+  }, [props.abilitato]);
+
+  const disattivaOnesignal = useCallback(async () => {
+    setMessaggio("");
+    setStato("loading");
+    try {
+      await ensureOneSignalInit();
+      await OneSignal.User.PushSubscription.optOut();
+      setStato("idle");
+      setMessaggio("Push OneSignal disattivato su questo dispositivo (resti collegato all&apos;account).");
+    } catch (e) {
+      setStato("err");
+      setMessaggio(e instanceof Error ? e.message : "Errore.");
+    }
   }, []);
 
-  const registra = useCallback(async () => {
+  /** --- Web Push VAPID (legacy) ------------------------------------------ */
+  const registraVapid = useCallback(async () => {
     setMessaggio("");
     if (!props.abilitato) {
       setMessaggio("Attiva prima «Notifiche push» nella sezione sotto.");
@@ -93,7 +154,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     }
   }, [props.abilitato, vapidPublic]);
 
-  const disattiva = useCallback(async () => {
+  const disattivaVapid = useCallback(async () => {
     setMessaggio("");
     setStato("loading");
     try {
@@ -106,11 +167,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
         } = await supabase.auth.getUser();
         const json = sub.toJSON();
         if (json.endpoint && user) {
-          await supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("endpoint", json.endpoint);
+          await supabase.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", json.endpoint);
         }
         await sub.unsubscribe();
       }
@@ -130,13 +187,49 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     );
   }
 
+  if (onesignalMode) {
+    return (
+      <div className="space-y-2">
+        <p className="text-xs text-muted">
+          Servizio gestito da <strong className="text-foreground">OneSignal</strong>. In dashboard OneSignal verifica URL
+          del sito (es. HTTPS su Vercel) e il file worker{" "}
+          <code className="rounded bg-surface-muted px-1">/onesignal/OneSignalSDKWorker.js</code>.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void registraOnesignal()}
+            disabled={stato === "loading" || !props.abilitato}
+            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
+          >
+            {stato === "loading" ? "Attendere…" : "Attiva notifiche su questo dispositivo"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void disattivaOnesignal()}
+            disabled={stato === "loading"}
+            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-muted disabled:opacity-50"
+          >
+            Disattiva su questo dispositivo
+          </button>
+        </div>
+        {stato === "ok" ? (
+          <p className="text-sm font-medium text-emerald-800">{messaggio}</p>
+        ) : messaggio ? (
+          <p className="text-sm text-muted">{messaggio}</p>
+        ) : null}
+      </div>
+    );
+  }
+
   if (stato === "no_key" || !vapidPublic) {
     return (
       <p className="text-sm text-amber-800">
         Manca <code className="rounded bg-amber-50 px-1">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> nel file{" "}
         <code className="rounded bg-amber-50 px-1">.env.local</code> (vedi{" "}
         <code className="rounded bg-amber-50 px-1">.env.example</code>
-        ). Riavvia il server dopo averla aggiunta.
+        ) oppure configura <code className="rounded bg-amber-50 px-1">NEXT_PUBLIC_ONESIGNAL_APP_ID</code> per OneSignal.
+        Riavvia il server dopo le modifiche.
       </p>
     );
   }
@@ -146,7 +239,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => void registra()}
+          onClick={() => void registraVapid()}
           disabled={stato === "loading" || !props.abilitato}
           className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
         >
@@ -154,7 +247,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
         </button>
         <button
           type="button"
-          onClick={() => void disattiva()}
+          onClick={() => void disattivaVapid()}
           disabled={stato === "loading"}
           className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-muted disabled:opacity-50"
         >

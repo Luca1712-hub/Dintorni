@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
+import { OneSignalAuthBridge } from "@/components/onesignal-auth-bridge";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
         >
           <SiteHeader />
         </Suspense>
+        <OneSignalAuthBridge />
         {children}
       </body>
     </html>
