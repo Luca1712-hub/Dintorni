@@ -6,25 +6,10 @@ export default async function Home() {
   let loggedIn = false;
   let nome: string | null = null;
   let ruolo: "acquirente" | "negozio" | null = null;
-  let deployDbMessage: string | null = null;
-
-  const vercelCommit =
-    typeof process.env.VERCEL_GIT_COMMIT_SHA === "string"
-      ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)
-      : null;
 
   if (isSupabaseConfigured()) {
     try {
       const supabase = await createServerSupabaseClient();
-      const { data: pingRow, error: pingError } = await supabase
-        .from("app_deploy_ping")
-        .select("message")
-        .eq("id", 1)
-        .maybeSingle();
-      if (!pingError && pingRow && typeof pingRow.message === "string") {
-        deployDbMessage = pingRow.message;
-      }
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -110,22 +95,6 @@ export default async function Home() {
             </>
           )}
         </div>
-
-        {(vercelCommit || deployDbMessage) && (
-          <p className="mt-8 border-t border-border pt-4 text-xs text-muted">
-            {vercelCommit && (
-              <>
-                Build Git/Vercel: <span className="font-mono text-foreground">{vercelCommit}</span>
-              </>
-            )}
-            {vercelCommit && deployDbMessage && " · "}
-            {deployDbMessage && (
-              <>
-                DB Supabase: <span className="font-mono text-foreground">{deployDbMessage}</span>
-              </>
-            )}
-          </p>
-        )}
       </div>
     </main>
   );
