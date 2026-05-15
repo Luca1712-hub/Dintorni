@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  computeSiteAccessToken,
+  getExpectedSiteAccessToken,
   isSiteAccessEnabled,
   SITE_ACCESS_COOKIE,
   siteAccessCookieOptions,
@@ -24,7 +24,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Password non corretta." }, { status: 401 });
   }
 
-  const token = await computeSiteAccessToken(password.trim());
+  const token = await getExpectedSiteAccessToken();
+  if (!token) {
+    return NextResponse.json({ error: "Configurazione server non valida." }, { status: 500 });
+  }
   const response = NextResponse.json({ ok: true });
   response.cookies.set(SITE_ACCESS_COOKIE, token, siteAccessCookieOptions());
   return response;

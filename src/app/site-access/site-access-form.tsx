@@ -1,11 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { sanitizeSiteAccessNext } from "@/lib/site-access";
 
 export function SiteAccessForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = sanitizeSiteAccessNext(searchParams.get("next"));
 
@@ -23,6 +22,7 @@ export function SiteAccessForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
+        credentials: "same-origin",
       });
 
       if (!res.ok) {
@@ -31,8 +31,10 @@ export function SiteAccessForm() {
         return;
       }
 
-      router.push(nextPath);
-      router.refresh();
+      // Ricarica intera pagina così il cookie impostato dalla risposta è sicuramente inviato al server
+      // (router.push dopo fetch a volte non applica subito il cookie e si resta bloccati su /site-access).
+      window.location.assign(nextPath);
+      return;
     } catch {
       setErrore("Errore di rete. Riprova.");
     } finally {

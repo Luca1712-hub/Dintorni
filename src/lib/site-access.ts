@@ -71,8 +71,9 @@ export function hasValidSiteAccessCookie(
 export function verifySiteAccessPassword(candidate: string): boolean {
   const expected = process.env.SITE_ACCESS_PASSWORD?.trim();
   if (!expected) return false;
-  if (candidate.length !== expected.length) return false;
-  return safeEqual(candidate, expected);
+  const cand = candidate.trim();
+  if (cand.length !== expected.length) return false;
+  return safeEqual(cand, expected);
 }
 
 export function siteAccessCookieOptions(maxAgeSeconds = 60 * 60 * 24 * 30) {
