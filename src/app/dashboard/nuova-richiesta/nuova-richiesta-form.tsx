@@ -13,6 +13,7 @@ import {
   MAX_CATEGORIE_RICHIESTA,
 } from "@/lib/categorie-negozio";
 import type { AllegatoMessaggio } from "@/lib/chat-types";
+import { labelComune, loadComuniItalia, trovaComuneDaLabel } from "@/lib/italia-comuni";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -30,6 +31,8 @@ export function NuovaRichiestaForm() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [isAcquirente, setIsAcquirente] = useState<boolean | null>(null);
+  /** Etichetta comune dal profilo (es. "Padova (PD)"); solo per acquirenti. */
+  const [profiloComuneLabel, setProfiloComuneLabel] = useState<string | null>(null);
 
   const [testo, setTesto] = useState("");
   const [zonaTipo, setZonaTipo] = useState<ZonaTipo>("gps");
@@ -71,14 +74,18 @@ export function NuovaRichiestaForm() {
         }
         const { data: profile } = await supabase
           .from("profiles")
-          .select("ruolo")
+          .select("ruolo, comune_acquirente")
           .eq("id", user.id)
           .maybeSingle();
         if (cancelled) return;
         if (profile?.ruolo === "negozio") {
           setIsAcquirente(false);
+          setProfiloComuneLabel(null);
         } else {
           setIsAcquirente(true);
+          const lbl = profile?.comune_acquirente;
+          const t = typeof lbl === "string" ? lbl.trim() : "";
+          setProfiloComuneLabel(t !== "" ? t : null);
         }
       } catch {
         if (!cancelled) setIsAcquirente(false);
@@ -102,6 +109,34 @@ export function NuovaRichiestaForm() {
       setGeoStatus("idle");
     }
   }, [zonaTipo]);
+
+  useEffect(() => {
+    if (zonaTipo !== "comune" || !profiloComuneLabel) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const rows = await loadComuniItalia();
+        if (cancelled) return;
+        const found = trovaComuneDaLabel(rows, profiloComuneLabel);
+        if (!found) return;
+        const comuneLabel = labelComune(found);
+        setZonaComuni((prev) => {
+          if (prev.provinciaSigla.trim() !== "") return prev;
+          return {
+            provinciaSigla: found.sigla,
+            tuttaProvincia: false,
+            comuniLabels: [comuneLabel],
+          };
+        });
+      } catch {
+        /* elenco non disponibile: niente pre-compilazione */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [zonaTipo, profiloComuneLabel]);
 
   const toggleCategoria = (nome: string) => {
     setErrore("");
