@@ -10,6 +10,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Escludere /onesignal/* così OneSignal registra gli SW dalla cartella public/ senza proxy (evita 404 su Vercel).
+    "/((?!_next/static|_next/image|favicon.ico|onesignal/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
