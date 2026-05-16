@@ -88,7 +88,7 @@ export function PushDiagnostica(props: { userId: string }) {
     }
   }, [props.userId]);
 
-  const testAvvisoChrome = useCallback(() => {
+  const testAvvisoChrome = useCallback(async () => {
     setErr("");
     setProva("");
     if (!("Notification" in window)) {
@@ -99,17 +99,30 @@ export function PushDiagnostica(props: { userId: string }) {
       setErr("Permesso non concesso. Usa «Attiva notifiche» prima.");
       return;
     }
+    if (!("serviceWorker" in navigator)) {
+      setErr("Service worker non disponibile in questo browser.");
+      return;
+    }
     try {
-      const n = new Notification("Test Chrome — Dintorni", {
-        body: "Se vedi questo, Android consente avvisi da Chrome per questo sito.",
-        tag: "dintorni-test-locale",
+      const regs = await navigator.serviceWorker.getRegistrations();
+      const reg =
+        regs.find((r) => r.scope.includes("/onesignal")) ??
+        regs.find((r) => r.scope.includes(location.origin)) ??
+        regs[0];
+      if (!reg) {
+        setErr("Nessun service worker attivo. Premi prima «Attiva notifiche», poi riprova.");
+        return;
+      }
+      await reg.showNotification("Test Chrome — Dintorni", {
+        body: "Se vedi questo, Chrome può mostrare avvisi (service worker OK).",
+        tag: "dintorni-test-sw",
+        icon: "/favicon.ico",
       });
-      n.onclick = () => window.focus();
       setProva(
-        "Test locale inviato. Se non compare un avviso, il blocco è Android/Chrome (non OneSignal).",
+        "Test inviato tramite service worker (come le push vere). Compare l'avviso?",
       );
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Test locale fallito.");
+      setErr(e instanceof Error ? e.message : "Test service worker fallito.");
     }
   }, []);
 
