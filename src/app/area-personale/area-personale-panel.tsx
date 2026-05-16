@@ -477,6 +477,12 @@ export function AreaPersonalePanel({ userId, initialUser }: Props) {
             <p className="mt-1 text-xs text-muted">
               Chrome o Edge consigliati. Su iOS le notifiche web hanno limitazioni note.
             </p>
+            <p className="mt-2 text-xs text-muted">
+              In OneSignal cerchi questo account con{" "}
+              <strong className="text-foreground">External ID</strong> ={" "}
+              <code className="break-all rounded bg-surface px-1 text-[11px] text-foreground">{userId}</code>{" "}
+              ({user.ruolo === "negozio" ? "negozio" : "acquirente"} · {user.email})
+            </p>
             <div className="mt-3">
               <NotifichePushSetup abilitato={user.notifichePush} userId={userId} />
             </div>
