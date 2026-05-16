@@ -18,6 +18,12 @@ import {
   permessoNotificheAttuale,
   richiediPermessoNotifiche,
 } from "@/lib/notification-permission";
+import {
+  assicuraLoginOnesignal,
+  attendiPushTokenOnesignal,
+  leggiStatoPushLocale,
+  messaggioPushNonRegistrato,
+} from "@/lib/onesignal/subscription";
 import { withTimeout } from "@/lib/with-timeout";
 
 type Stato = "idle" | "loading" | "ok" | "err" | "non_supportato" | "no_key";
@@ -40,6 +46,27 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
       setStato("non_supportato");
     }
   }, [onesignalMode]);
+
+  useEffect(() => {
+    if (!onesignalMode || !props.abilitato) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        await ensureOneSignalInit();
+        await assicuraLoginOnesignal(props.userId);
+        const stato = leggiStatoPushLocale();
+        if (!cancelled && stato.optedIn && stato.token) {
+          setStato("ok");
+          setMessaggio("Notifiche push attive su questo dispositivo.");
+        }
+      } catch {
+        /* init/login opzionale al caricamento pagina */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [onesignalMode, props.abilitato, props.userId]);
 
   const registraOnesignal = useCallback(async () => {
     setMessaggio("");
@@ -72,11 +99,7 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
       }
 
       setMessaggio("Collegamento al tuo account…");
-      try {
-        await withTimeout(OneSignal.login(props.userId), 12_000, "Collegamento account");
-      } catch {
-        // Il bridge in layout può aver già fatto login; continuiamo.
-      }
+      await withTimeout(assicuraLoginOnesignal(props.userId), 18_000, "Collegamento account");
 
       const prima = permessoNotificheAttuale();
       if (prima === "granted") {
@@ -121,12 +144,33 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
       setMessaggio("Registrazione dispositivo…");
       await withTimeout(OneSignal.User.PushSubscription.optIn(), 25_000, "Registrazione push");
 
+      setMessaggio("Verifica registrazione (può richiedere alcuni secondi)…");
+      let statoPush = await attendiPushTokenOnesignal(35_000);
+
+      if (!statoPush.token) {
+        try {
+          await withTimeout(OneSignal.Notifications.requestPermission(), 12_000, "Permesso OneSignal");
+        } catch {
+          /* continua */
+        }
+        await withTimeout(OneSignal.User.PushSubscription.optIn(), 15_000, "Registrazione push");
+        statoPush = await attendiPushTokenOnesignal(25_000);
+      }
+
+      await withTimeout(assicuraLoginOnesignal(props.userId), 15_000, "Collegamento account");
+
+      if (!statoPush.optedIn || !statoPush.token) {
+        setStato("err");
+        setMessaggio(messaggioPushNonRegistrato(statoPush));
+        return;
+      }
+
       const regs = await withTimeout(navigator.serviceWorker.getRegistrations(), 8_000, "Service worker");
       const onesignalReg = regs.some((r) => r.scope.includes("/onesignal"));
       if (!onesignalReg) {
         setStato("err");
         setMessaggio(
-          "Worker OneSignal non trovato. Ricarica la pagina (F5), attendi qualche secondo, poi premi di nuovo «Attiva notifiche».",
+          "Worker OneSignal non trovato. Chiudi Chrome sul telefono, riapri il sito e premi di nuovo «Attiva notifiche».",
         );
         return;
       }
@@ -263,10 +307,10 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
     return (
       <div className="space-y-2">
         <p className="text-xs text-muted">
-          Servizio <strong className="text-foreground">OneSignal</strong>. Consigliato:{" "}
-          <strong className="text-foreground">Chrome</strong> o <strong className="text-foreground">Edge</strong>{" "}
-          a schermo intero. Su <strong className="text-foreground">Brave</strong> abbassa Shields (leone) per questo
-          sito. In app tipo Cortana il popup spesso non compare: apri il sito in Chrome.
+          Servizio <strong className="text-foreground">OneSignal</strong>. Su{" "}
+          <strong className="text-foreground">Android</strong> usa <strong className="text-foreground">Chrome</strong>{" "}
+          (non l&apos;anteprima dentro WhatsApp). Dopo «Attiva» deve comparire il messaggio verde; altrimenti la push
+          non è registrata. Su desktop: Chrome o Edge.
           {permessoNotificheAttuale() !== "unsupported" ? (
             <>
               {" "}

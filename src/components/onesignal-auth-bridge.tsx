@@ -3,14 +3,12 @@
 import { useEffect } from "react";
 import OneSignal from "react-onesignal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import {
-  ensureOneSignalInit,
-  isOnesignalClientConfigured,
-  unregisterConflictingPushServiceWorkers,
-} from "@/lib/onesignal/client-init";
+import { ensureOneSignalInit, isOnesignalClientConfigured } from "@/lib/onesignal/client-init";
+import { assicuraLoginOnesignal } from "@/lib/onesignal/subscription";
 
 /**
- * Allinea external_id OneSignal = id utente Supabase dopo login e fa logout su OneSignal in uscita.
+ * Allinea login/logout OneSignal a ogni sessione (anche su smartphone).
+ * Senza login su ogni visita, la subscription può restare anonima e le push non arrivano.
  */
 export function OneSignalAuthBridge() {
   useEffect(() => {
@@ -18,18 +16,19 @@ export function OneSignalAuthBridge() {
 
     const supabase = createBrowserSupabaseClient();
 
-    void (async () => {
+    async function syncLogin(userId: string) {
       try {
-        await unregisterConflictingPushServiceWorkers();
         await ensureOneSignalInit();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          await OneSignal.login(session.user.id);
-        }
+        await assicuraLoginOnesignal(userId);
       } catch (e) {
-        console.error("[OneSignalAuthBridge] init/session", e);
+        console.error("[OneSignalAuthBridge] login", e);
+      }
+    }
+
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user?.id) {
+        await syncLogin(data.session.user.id);
       }
     })();
 
@@ -37,11 +36,11 @@ export function OneSignalAuthBridge() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
-        await ensureOneSignalInit();
         if (event === "SIGNED_IN" && session?.user?.id) {
-          await OneSignal.login(session.user.id);
+          await syncLogin(session.user.id);
         }
         if (event === "SIGNED_OUT") {
+          await ensureOneSignalInit();
           await OneSignal.logout();
         }
       } catch (e) {

@@ -47,7 +47,12 @@ export async function sendOnesignalPushToUser(params: SendParams): Promise<boole
   }
 
   const json: unknown = await res.json().catch(() => null);
-  const id =
-    typeof json === "object" && json !== null && "id" in json ? (json as { id?: string }).id : undefined;
-  return Boolean(id);
+  if (typeof json === "object" && json !== null) {
+    const body = json as { id?: string; errors?: unknown };
+    if (body.errors) {
+      console.error("[OneSignal] notifications API errors", body.errors);
+    }
+    if (body.id) return true;
+  }
+  return false;
 }
