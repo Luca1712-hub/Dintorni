@@ -24,7 +24,7 @@ export async function sendOnesignalPushToUser(params: SendParams): Promise<boole
   const res = await fetch("https://api.onesignal.com/notifications", {
     method: "POST",
     headers: {
-      Authorization: `Key ${apiKey}`,
+      Authorization: `key ${apiKey}`,
       "Content-Type": "application/json; charset=utf-8",
     },
     body: JSON.stringify({
