@@ -18,11 +18,14 @@ import {
   permessoNotificheAttuale,
   richiediPermessoNotifiche,
 } from "@/lib/notification-permission";
+import { isMobileDevice } from "@/lib/device";
 import {
   assicuraLoginOnesignal,
   attendiPushTokenOnesignal,
   leggiStatoPushLocale,
   messaggioPushNonRegistrato,
+  registrazioneLocaleCompleta,
+  verificaRegistrazioneSuServer,
 } from "@/lib/onesignal/subscription";
 import { withTimeout } from "@/lib/with-timeout";
 
@@ -55,9 +58,12 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
         await ensureOneSignalInit();
         await assicuraLoginOnesignal(props.userId);
         const stato = leggiStatoPushLocale();
-        if (!cancelled && stato.optedIn && stato.token) {
-          setStato("ok");
-          setMessaggio("Notifiche push attive su questo dispositivo.");
+        if (!cancelled && registrazioneLocaleCompleta(stato)) {
+          const v = await verificaRegistrazioneSuServer(stato.subscriptionId);
+          if (v.localRegistered) {
+            setStato("ok");
+            setMessaggio("Notifiche push attive su questo dispositivo.");
+          }
         }
       } catch {
         /* init/login opzionale al caricamento pagina */
@@ -159,9 +165,34 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
 
       await withTimeout(assicuraLoginOnesignal(props.userId), 15_000, "Collegamento account");
 
-      if (!statoPush.optedIn || !statoPush.token) {
+      if (!registrazioneLocaleCompleta(statoPush)) {
         setStato("err");
         setMessaggio(messaggioPushNonRegistrato(statoPush));
+        return;
+      }
+
+      setMessaggio("Verifica su server OneSignal…");
+      let registratoServer = false;
+      for (let t = 0; t < 12; t++) {
+        const v = await verificaRegistrazioneSuServer(statoPush.subscriptionId);
+        if (v.localRegistered) {
+          registratoServer = true;
+          break;
+        }
+        if (t < 11) {
+          await new Promise((r) => window.setTimeout(r, 2_000));
+        }
+      }
+
+      if (!registratoServer) {
+        setStato("err");
+        setMessaggio(
+          isMobileDevice()
+            ? "Questo telefono non risulta registrato su OneSignal (solo il PC potrebbe esserlo). " +
+                "Chiudi tutte le schede Chrome, riapri il sito, premi «Attiva notifiche» e attendi fino a 1 minuto. " +
+                "In OneSignal → Settings → Web controlla che il sito sia https://dintorni.vercel.app"
+            : "OneSignal non vede questo dispositivo. Ricarica la pagina e riprova «Attiva notifiche».",
+        );
         return;
       }
 

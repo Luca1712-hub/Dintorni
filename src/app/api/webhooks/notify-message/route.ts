@@ -149,14 +149,22 @@ export async function POST(request: Request) {
     skippedPushReason = "off";
   } else if (isOnesignalPushConfigured()) {
     try {
-      const ok = await sendOnesignalPushToUser({
+      const result = await sendOnesignalPushToUser({
         externalUserId: destinatarioId,
         title: "Nuovo messaggio — Dintorni",
         body: anteprima,
         url: chatUrl,
       });
-      pushInviati = ok ? 1 : 0;
-      if (!ok) skippedPushReason = "none";
+      pushInviati = result.sent ? Math.max(1, result.targetedSubscriptions) : 0;
+      if (!result.sent) {
+        skippedPushReason = "none";
+        console.error(
+          "[notify-message] OneSignal push non inviata",
+          destinatarioId,
+          "subscription target:",
+          result.targetedSubscriptions,
+        );
+      }
     } catch (e) {
       console.error("[notify-message] OneSignal", e);
       skippedPushReason = "none";

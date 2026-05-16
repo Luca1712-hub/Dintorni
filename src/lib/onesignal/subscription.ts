@@ -1,6 +1,7 @@
 "use client";
 
 import OneSignal from "react-onesignal";
+import { isAndroidDevice, isMobileDevice } from "@/lib/device";
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -40,17 +41,74 @@ export function leggiStatoPushLocale(): StatoPushLocale {
  * Dopo optIn(), su Android il token può arrivare in ritardo.
  * Senza token la push non viene recapitata anche con permesso «consentito».
  */
-export async function attendiPushTokenOnesignal(timeoutMs = 35_000): Promise<StatoPushLocale> {
-  const deadline = Date.now() + timeoutMs;
+export function registrazioneLocaleCompleta(stato: StatoPushLocale): boolean {
+  if (!stato.optedIn || !stato.token) return false;
+  if (isMobileDevice() && !stato.subscriptionId) return false;
+  return true;
+}
+
+export async function attendiPushTokenOnesignal(timeoutMs?: number): Promise<StatoPushLocale> {
+  const timeout = timeoutMs ?? (isMobileDevice() ? 60_000 : 35_000);
+  const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     const stato = leggiStatoPushLocale();
-    if (stato.optedIn && stato.token) return stato;
+    if (registrazioneLocaleCompleta(stato)) return stato;
     await delay(400);
   }
   return leggiStatoPushLocale();
 }
 
+/** Chiede a OneSignal (server) se questo dispositivo risulta registrato. */
+export async function verificaRegistrazioneSuServer(
+  localSubscriptionId: string | null,
+): Promise<{
+  ok: boolean;
+  webPushAttive: number;
+  androidWebPushAttive: number;
+  localRegistered: boolean;
+  errore?: string;
+}> {
+  const q = localSubscriptionId ? `?localId=${encodeURIComponent(localSubscriptionId)}` : "";
+  const res = await fetch(`/api/push/verifica${q}`, { credentials: "include" });
+  const json = (await res.json().catch(() => null)) as {
+    ok?: boolean;
+    error?: string;
+    webPushAttive?: number;
+    androidWebPushAttive?: number;
+    localRegistered?: boolean;
+  } | null;
+
+  if (!res.ok || !json?.ok) {
+    return {
+      ok: false,
+      webPushAttive: 0,
+      androidWebPushAttive: 0,
+      localRegistered: false,
+      errore: json?.error ?? "Verifica server non riuscita.",
+    };
+  }
+
+  return {
+    ok: true,
+    webPushAttive: json.webPushAttive ?? 0,
+    androidWebPushAttive: json.androidWebPushAttive ?? 0,
+    localRegistered: Boolean(json.localRegistered),
+  };
+}
+
 export function messaggioPushNonRegistrato(stato: StatoPushLocale): string {
+  if (isMobileDevice() && stato.token && !stato.subscriptionId) {
+    return (
+      "Registrazione sul telefono ancora in corso o bloccata. Attendi 1 minuto, ricarica la pagina e premi di nuovo «Attiva notifiche». " +
+      "Usa Chrome (non anteprima WhatsApp)."
+    );
+  }
+  if (isAndroidDevice() && stato.token && stato.subscriptionId) {
+    return (
+      "Il telefono sembra registrato in locale ma OneSignal non lo vede ancora. Attendi 30 secondi e premi di nuovo «Attiva notifiche», " +
+      "oppure in OneSignal → Audience controlla che ci sia un dispositivo Android per il tuo account."
+    );
+  }
   if (!stato.token && Notification.permission === "granted") {
     return (
       "Il telefono ha consentito le notifiche ma la registrazione push non è completa. " +
