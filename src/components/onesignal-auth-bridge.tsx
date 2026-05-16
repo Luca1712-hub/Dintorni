@@ -37,7 +37,6 @@ export function OneSignalAuthBridge() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
-        await unregisterConflictingPushServiceWorkers();
         await ensureOneSignalInit();
         if (event === "SIGNED_IN" && session?.user?.id) {
           await OneSignal.login(session.user.id);

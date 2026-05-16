@@ -7,9 +7,10 @@ import {
   ensureOneSignalInit,
   formatOnesignalError,
   isOnesignalClientConfigured,
-  unregisterConflictingPushServiceWorkers,
+  resetOneSignalInit,
 } from "@/lib/onesignal/client-init";
 import { urlBase64ToVapidKeyBuffer } from "@/lib/push-client";
+import { withTimeout } from "@/lib/with-timeout";
 
 type Stato = "idle" | "loading" | "ok" | "err" | "non_supportato" | "no_key";
 
@@ -32,85 +33,93 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
     }
   }, [onesignalMode]);
 
-  /** --- OneSignal -------------------------------------------------------- */
   const registraOnesignal = useCallback(async () => {
     setMessaggio("");
     if (!props.abilitato) {
-      setMessaggio("Attiva prima «Notifiche push» nella sezione sotto.");
+      setMessaggio("Attiva prima la casella «Notifiche push» sopra, poi premi di nuovo questo pulsante.");
       return;
     }
+    if (!("Notification" in window)) {
+      setStato("non_supportato");
+      return;
+    }
+
     setStato("loading");
+    setMessaggio("Avvio OneSignal…");
+
     try {
-      await unregisterConflictingPushServiceWorkers();
-      await ensureOneSignalInit();
-
       try {
-        await OneSignal.login(props.userId);
+        await withTimeout(ensureOneSignalInit(), 20_000, "Inizializzazione OneSignal");
       } catch (e) {
-        setStato("err");
-        setMessaggio(`OneSignal login: ${formatOnesignalError(e)}`);
-        return;
+        resetOneSignalInit();
+        throw e;
       }
 
-      const ok = await OneSignal.Notifications.requestPermission();
-      if (!ok) {
-        setStato("err");
-        setMessaggio("Permesso notifiche negato dal browser.");
-        return;
-      }
-
+      setMessaggio("Collegamento al tuo account…");
       try {
-        await OneSignal.User.PushSubscription.optIn();
-      } catch (e) {
+        await withTimeout(OneSignal.login(props.userId), 12_000, "Collegamento account");
+      } catch {
+        // Il bridge in layout può aver già fatto login; continuiamo.
+      }
+
+      setMessaggio("Il browser ti chiederà il permesso: scegli «Consenti».");
+      const permesso = await withTimeout(
+        (async () => {
+          const p = await Notification.requestPermission();
+          return p === "granted";
+        })(),
+        120_000,
+        "Permesso notifiche",
+      );
+
+      if (!permesso) {
         setStato("err");
-        setMessaggio(`OneSignal opt-in: ${formatOnesignalError(e)}`);
+        setMessaggio(
+          "Permesso negato o bloccato. In Chrome: icona lucchetto nella barra indirizzi → Notifiche → Consenti, poi riprova.",
+        );
         return;
       }
 
-      const regs = await navigator.serviceWorker.getRegistrations();
-      const dettaglio = regs
-        .map((r) => `${r.scope} → ${r.active?.scriptURL ?? r.installing?.scriptURL ?? "?"}`)
-        .join("; ");
+      setMessaggio("Registrazione dispositivo…");
+      await withTimeout(OneSignal.User.PushSubscription.optIn(), 25_000, "Registrazione push");
+
+      const regs = await withTimeout(navigator.serviceWorker.getRegistrations(), 8_000, "Service worker");
       const onesignalReg = regs.some((r) => r.scope.includes("/onesignal"));
       if (!onesignalReg) {
         setStato("err");
         setMessaggio(
-          `Worker OneSignal mancante. Trovato: ${dettaglio || "nessun worker"}. Premi F5 per ricaricare la pagina, poi «Attiva notifiche» di nuovo.`,
+          "Worker OneSignal non trovato. Ricarica la pagina (F5), attendi qualche secondo, poi premi di nuovo «Attiva notifiche».",
         );
         return;
       }
 
       setStato("ok");
-      setMessaggio("Notifiche push (OneSignal) attive su questo dispositivo.");
+      setMessaggio("Notifiche push attive su questo dispositivo.");
     } catch (e) {
       setStato("err");
-      setMessaggio(`OneSignal: ${formatOnesignalError(e)}`);
-    } finally {
-      setStato((s) => (s === "loading" ? "idle" : s));
+      setMessaggio(formatOnesignalError(e));
     }
   }, [props.abilitato, props.userId]);
 
   const disattivaOnesignal = useCallback(async () => {
     setMessaggio("");
     setStato("loading");
+    setMessaggio("Disattivazione…");
     try {
-      await ensureOneSignalInit();
-      await OneSignal.User.PushSubscription.optOut();
+      await withTimeout(ensureOneSignalInit(), 15_000, "OneSignal");
+      await withTimeout(OneSignal.User.PushSubscription.optOut(), 15_000, "Disattivazione");
       setStato("idle");
-      setMessaggio("Push OneSignal disattivato su questo dispositivo (resti collegato all&apos;account).");
+      setMessaggio("Push disattivato su questo dispositivo.");
     } catch (e) {
       setStato("err");
-      setMessaggio(e instanceof Error ? e.message : "Errore.");
-    } finally {
-      setStato((s) => (s === "loading" ? "idle" : s));
+      setMessaggio(formatOnesignalError(e));
     }
   }, []);
 
-  /** --- Web Push VAPID (legacy) ------------------------------------------ */
   const registraVapid = useCallback(async () => {
     setMessaggio("");
     if (!props.abilitato) {
-      setMessaggio("Attiva prima «Notifiche push» nella sezione sotto.");
+      setMessaggio("Attiva prima la casella «Notifiche push» sopra.");
       return;
     }
     if (!vapidPublic) {
@@ -150,14 +159,20 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
       }
 
       const supabase = createBrowserSupabaseClient();
-      const { error } = await supabase.from("push_subscriptions").upsert(
-        {
-          user_id: props.userId,
-          endpoint: json.endpoint,
-          p256dh: json.keys.p256dh,
-          auth: json.keys.auth,
-        },
-        { onConflict: "user_id,endpoint" },
+      const { error } = await withTimeout(
+        Promise.resolve(
+          supabase.from("push_subscriptions").upsert(
+            {
+              user_id: props.userId,
+              endpoint: json.endpoint,
+              p256dh: json.keys.p256dh,
+              auth: json.keys.auth,
+            },
+            { onConflict: "user_id,endpoint" },
+          ),
+        ),
+        15_000,
+        "Salvataggio subscription",
       );
 
       if (error) {
@@ -169,8 +184,6 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
     } catch (e) {
       setStato("err");
       setMessaggio(e instanceof Error ? e.message : "Errore durante la registrazione.");
-    } finally {
-      setStato((s) => (s === "loading" ? "idle" : s));
     }
   }, [props.abilitato, props.userId, vapidPublic]);
 
@@ -197,15 +210,13 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
     } catch (e) {
       setStato("err");
       setMessaggio(e instanceof Error ? e.message : "Errore.");
-    } finally {
-      setStato((s) => (s === "loading" ? "idle" : s));
     }
   }, [props.userId]);
 
   if (stato === "non_supportato") {
     return (
       <p className="text-sm text-muted">
-        Il browser non supporta le notifiche push (prova Chrome o Edge su desktop, o aggiorna il sistema).
+        Il browser non supporta le notifiche push (prova Chrome o Edge su desktop).
       </p>
     );
   }
@@ -214,9 +225,8 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
     return (
       <div className="space-y-2">
         <p className="text-xs text-muted">
-          Servizio gestito da <strong className="text-foreground">OneSignal</strong>. In dashboard OneSignal verifica URL
-          del sito (es. HTTPS su Vercel) e il file worker{" "}
-          <code className="rounded bg-surface-muted px-1">/onesignal/OneSignalSDKWorker.js</code>.
+          Servizio <strong className="text-foreground">OneSignal</strong>. Usa Chrome o Edge su desktop per
+          risultati migliori.
         </p>
         <div className="flex flex-wrap gap-2">
           <button
@@ -239,7 +249,9 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
         {stato === "ok" ? (
           <p className="text-sm font-medium text-emerald-800">{messaggio}</p>
         ) : messaggio ? (
-          <p className="text-sm text-muted">{messaggio}</p>
+          <p className={stato === "err" ? "text-sm font-medium text-red-600" : "text-sm text-muted"}>
+            {messaggio}
+          </p>
         ) : null}
       </div>
     );
@@ -248,11 +260,8 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
   if (stato === "no_key" || !vapidPublic) {
     return (
       <p className="text-sm text-amber-800">
-        Manca <code className="rounded bg-amber-50 px-1">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> nel file{" "}
-        <code className="rounded bg-amber-50 px-1">.env.local</code> (vedi{" "}
-        <code className="rounded bg-amber-50 px-1">.env.example</code>
-        ) oppure configura <code className="rounded bg-amber-50 px-1">NEXT_PUBLIC_ONESIGNAL_APP_ID</code> per OneSignal.
-        Riavvia il server dopo le modifiche.
+        Configura <code className="rounded bg-amber-50 px-1">NEXT_PUBLIC_ONESIGNAL_APP_ID</code> su Vercel
+        oppure le chiavi VAPID in <code className="rounded bg-amber-50 px-1">.env.local</code>.
       </p>
     );
   }
@@ -280,8 +289,11 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
       {stato === "ok" ? (
         <p className="text-sm font-medium text-emerald-800">{messaggio}</p>
       ) : messaggio ? (
-        <p className="text-sm text-muted">{messaggio}</p>
+        <p className={stato === "err" ? "text-sm font-medium text-red-600" : "text-sm text-muted"}>
+          {messaggio}
+        </p>
       ) : null}
-    </div>
+        </div>
   );
 }
+
