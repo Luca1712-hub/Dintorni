@@ -5,9 +5,9 @@ import OneSignal from "react-onesignal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import {
   ensureOneSignalInit,
+  formatOnesignalError,
   isOnesignalClientConfigured,
-  resetOneSignalInit,
-  unregisterAllServiceWorkers,
+  unregisterConflictingPushServiceWorkers,
 } from "@/lib/onesignal/client-init";
 import { urlBase64ToVapidKeyBuffer } from "@/lib/push-client";
 
@@ -41,9 +41,9 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     }
     setStato("loading");
     try {
-      await unregisterAllServiceWorkers();
-      resetOneSignalInit();
+      await unregisterConflictingPushServiceWorkers();
       await ensureOneSignalInit();
+
       const supabase = createBrowserSupabaseClient();
       const {
         data: { user },
@@ -54,7 +54,14 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
         return;
       }
 
-      await OneSignal.login(user.id);
+      try {
+        await OneSignal.login(user.id);
+      } catch (e) {
+        setStato("err");
+        setMessaggio(`OneSignal login: ${formatOnesignalError(e)}`);
+        return;
+      }
+
       const ok = await OneSignal.Notifications.requestPermission();
       if (!ok) {
         setStato("err");
@@ -62,14 +69,23 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
         return;
       }
 
-      await OneSignal.User.PushSubscription.optIn();
+      try {
+        await OneSignal.User.PushSubscription.optIn();
+      } catch (e) {
+        setStato("err");
+        setMessaggio(`OneSignal opt-in: ${formatOnesignalError(e)}`);
+        return;
+      }
 
       const regs = await navigator.serviceWorker.getRegistrations();
-      const onesignalReg = regs.some((r) => r.scope.includes("/onesignal/"));
+      const dettaglio = regs
+        .map((r) => `${r.scope} → ${r.active?.scriptURL ?? r.installing?.scriptURL ?? "?"}`)
+        .join("; ");
+      const onesignalReg = regs.some((r) => r.scope.includes("/onesignal"));
       if (!onesignalReg) {
         setStato("err");
         setMessaggio(
-          "OneSignal non ha registrato il service worker. Ricarica la pagina e riprova; in Console non devono restare errori OneSignal.",
+          `Worker OneSignal mancante. Trovato: ${dettaglio || "nessun worker"}. Premi F5 per ricaricare la pagina, poi «Attiva notifiche» di nuovo.`,
         );
         return;
       }
@@ -78,7 +94,7 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
       setMessaggio("Notifiche push (OneSignal) attive su questo dispositivo.");
     } catch (e) {
       setStato("err");
-      setMessaggio(e instanceof Error ? e.message : "Errore durante la registrazione OneSignal.");
+      setMessaggio(`OneSignal: ${formatOnesignalError(e)}`);
     }
   }, [props.abilitato]);
 

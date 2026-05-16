@@ -3,7 +3,11 @@
 import { useEffect } from "react";
 import OneSignal from "react-onesignal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { ensureOneSignalInit, isOnesignalClientConfigured } from "@/lib/onesignal/client-init";
+import {
+  ensureOneSignalInit,
+  isOnesignalClientConfigured,
+  unregisterConflictingPushServiceWorkers,
+} from "@/lib/onesignal/client-init";
 
 /**
  * Allinea external_id OneSignal = id utente Supabase dopo login e fa logout su OneSignal in uscita.
@@ -16,6 +20,7 @@ export function OneSignalAuthBridge() {
 
     void (async () => {
       try {
+        await unregisterConflictingPushServiceWorkers();
         await ensureOneSignalInit();
         const {
           data: { session },
@@ -32,6 +37,7 @@ export function OneSignalAuthBridge() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
+        await unregisterConflictingPushServiceWorkers();
         await ensureOneSignalInit();
         if (event === "SIGNED_IN" && session?.user?.id) {
           await OneSignal.login(session.user.id);

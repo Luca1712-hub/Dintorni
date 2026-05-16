@@ -57,3 +57,20 @@ export function ensureOneSignalInit(): Promise<void> {
 
   return initPromise;
 }
+
+export function formatOnesignalError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  if (e && typeof e === "object") {
+    const o = e as { message?: unknown; reason?: unknown; code?: unknown };
+    if (typeof o.message === "string") return o.message;
+    if (typeof o.reason === "string") return o.reason;
+    if (o.code != null) return `Codice OneSignal: ${String(o.code)}`;
+    try {
+      return JSON.stringify(e);
+    } catch {
+      /* ignore */
+    }
+  }
+  return "Errore sconosciuto OneSignal.";
+}
