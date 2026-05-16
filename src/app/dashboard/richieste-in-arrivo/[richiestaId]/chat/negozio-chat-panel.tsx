@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getBrowserAuthUserId } from "@/lib/auth-client";
+import type { NegozioChatInit } from "@/lib/chat-negozio-init";
 import { parseAllegati, type AllegatoMessaggio } from "@/lib/chat-types";
 import { RISPOSTE_PREDEFINITE_NEGOZIO } from "@/lib/risposte-predefinite-negozio";
 import { useMessaggiConversazione } from "@/lib/use-messaggi-conversazione";
@@ -13,27 +14,31 @@ import {
 import type { RichiestaStato } from "@/lib/richiesta";
 import { useRichiestaStato } from "@/lib/use-richiesta-stato";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 const BUCKET = "messaggi-allegati";
 const MAX_IMMAGINI = 6;
 const MAX_MB = 5;
 
-type Props = { richiestaId: string };
+type Props = { richiestaId: string; serverInit: NegozioChatInit };
 
-export function NegozioChatPanel({ richiestaId }: Props) {
-  const router = useRouter();
+export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState("");
-  const [richiestaTesto, setRichiestaTesto] = useState<string | null>(null);
-  const [richiestaAllegati, setRichiestaAllegati] = useState<AllegatoMessaggio[]>([]);
-  const [conversazioneId, setConversazioneId] = useState<string | null>(null);
-  const [myId, setMyId] = useState<string | null>(null);
-  const [statoRichiestaInit, setStatoRichiestaInit] = useState<RichiestaStato | null>(null);
-
+  const [error, setError] = useState(serverInit.ok ? "" : serverInit.error);
+  const [richiestaTesto] = useState<string | null>(
+    serverInit.ok ? serverInit.richiestaTesto : null,
+  );
+  const [richiestaAllegati] = useState<AllegatoMessaggio[]>(
+    serverInit.ok ? serverInit.richiestaAllegati : [],
+  );
+  const [conversazioneId] = useState<string | null>(
+    serverInit.ok ? serverInit.conversazioneId : null,
+  );
+  const [myId] = useState<string | null>(serverInit.ok ? serverInit.myId : null);
+  const [statoRichiestaInit] = useState<RichiestaStato | null>(
+    serverInit.ok ? serverInit.statoRichiestaInit : null,
+  );
   const statoPoll = useRichiestaStato(richiestaId);
   const statoRichiesta = statoPoll ?? statoRichiestaInit;
   const richiestaChiusa = statoRichiesta === "chiusa";
@@ -59,112 +64,6 @@ export function NegozioChatPanel({ richiestaId }: Props) {
       anteprimaFiles.forEach((x) => URL.revokeObjectURL(x.url));
     };
   }, [anteprimaFiles]);
-
-  const assicuraConversazione = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setError("Supabase non configurato.");
-      setReady(true);
-      return;
-    }
-    const supabase = createBrowserSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.replace("/accesso");
-      return;
-    }
-
-    const { data: profilo } = await supabase
-      .from("profiles")
-      .select("ruolo")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (profilo?.ruolo !== "negozio") {
-      setError("Questa chat e` riservata ai negozi.");
-      setReady(true);
-      return;
-    }
-    setMyId(user.id);
-    setStatoRichiestaInit(null);
-
-    const { data: richiesta, error: er } = await supabase
-      .from("richieste")
-      .select("testo, stato, allegati")
-      .eq("id", richiestaId)
-      .maybeSingle();
-
-    if (er || !richiesta) {
-      setError("Richiesta non trovata o non visibile con il tuo account.");
-      setReady(true);
-      return;
-    }
-    setRichiestaTesto(typeof richiesta.testo === "string" ? richiesta.testo : null);
-    setRichiestaAllegati(parseAllegati(richiesta.allegati));
-    const st = richiesta.stato;
-    if (st === "aperta" || st === "chiusa") {
-      setStatoRichiestaInit(st);
-    }
-
-    const { data: esistente } = await supabase
-      .from("conversazioni")
-      .select("id")
-      .eq("richiesta_id", richiestaId)
-      .eq("negozio_id", user.id)
-      .maybeSingle();
-
-    let cid = esistente?.id as string | undefined;
-
-    if (!cid) {
-      const { data: r } = await supabase
-        .from("richieste")
-        .select("acquirente_id")
-        .eq("id", richiestaId)
-        .single();
-      if (!r?.acquirente_id) {
-        setError("Impossibile avviare la chat per questa richiesta.");
-        setReady(true);
-        return;
-      }
-      const { data: creata, error: insErr } = await supabase
-        .from("conversazioni")
-        .insert({
-          richiesta_id: richiestaId,
-          acquirente_id: r.acquirente_id,
-          negozio_id: user.id,
-        })
-        .select("id")
-        .single();
-
-      if (insErr) {
-        const { data: diNuovo } = await supabase
-          .from("conversazioni")
-          .select("id")
-          .eq("richiesta_id", richiestaId)
-          .eq("negozio_id", user.id)
-          .maybeSingle();
-        cid = diNuovo?.id as string | undefined;
-        if (!cid) {
-          setError(
-            insErr.message.includes("conversazioni_bi_validate")
-              ? "Non puoi aprire la chat: richiesta chiusa o categorie non compatibili."
-              : insErr.message,
-          );
-          setReady(true);
-          return;
-        }
-      } else {
-        cid = creata?.id as string;
-      }
-    }
-
-    setConversazioneId(cid!);
-    setReady(true);
-  }, [richiestaId, router]);
-
-  useEffect(() => {
-    void assicuraConversazione();
-  }, [assicuraConversazione]);
 
   useEffect(() => {
     if (!conversazioneId) return;
@@ -219,11 +118,13 @@ export function NegozioChatPanel({ richiestaId }: Props) {
       setError("La richiesta e` chiusa: non puoi inviare altri messaggi.");
       return;
     }
+    if (!conversazioneId || !myId) return;
     const supabase = createBrowserSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user || !conversazioneId) return;
+    const userId = myId ?? (await getBrowserAuthUserId());
+    if (!userId) {
+      window.location.assign("/accesso");
+      return;
+    }
 
     const testoPulito = testo.trim();
     if (testoPulito.length === 0 && files.length === 0) {
@@ -236,7 +137,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
       const allegati: AllegatoMessaggio[] = [];
       for (const f of files) {
         const ext = f.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const path = `${userId}/${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from(BUCKET)
           .upload(path, f, { cacheControl: "3600", upsert: false });
@@ -251,7 +152,7 @@ export function NegozioChatPanel({ richiestaId }: Props) {
 
       const { error: msgErr } = await supabase.from("messaggi").insert({
         conversazione_id: conversazioneId,
-        mittente_id: user.id,
+        mittente_id: userId,
         testo: testoPulito,
         allegati,
       });
@@ -273,14 +174,6 @@ export function NegozioChatPanel({ richiestaId }: Props) {
       setInvio(false);
     }
   };
-
-  if (!ready && !error) {
-    return (
-      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
-        <p className="text-muted">Preparazione chat…</p>
-      </div>
-    );
-  }
 
   if (error && !conversazioneId) {
     return (

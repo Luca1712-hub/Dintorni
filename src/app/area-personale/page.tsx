@@ -14,6 +14,7 @@ import { CATEGORIE_MERCEOLOGICHE } from "@/lib/categorie-negozio";
 import { geocodeViaEComune } from "@/lib/geocode-negozio-client";
 import { joinIndirizzoNegozio, splitIndirizzoNegozio } from "@/lib/indirizzo-negozio";
 import { FRASE_ELIMINAZIONE_ACCOUNT, confermaEliminazioneAccount } from "@/lib/account-delete-confirm";
+import { esciDallAccount } from "@/lib/auth-client";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -55,11 +56,11 @@ export default function AreaPersonalePage() {
     try {
       const supabase = createBrowserSupabaseClient();
       const {
-        data: { user: authUser },
-        error: authError,
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      const authUser = session?.user ?? null;
 
-      if (authError || !authUser) {
+      if (!authUser) {
         setUser(null);
         setLoading(false);
         return;
@@ -291,15 +292,7 @@ export default function AreaPersonalePage() {
         setEliminaErr(msg ?? "Non è stato possibile eliminare l’account.");
         return;
       }
-      try {
-        const supabase = createBrowserSupabaseClient();
-        await supabase.auth.signOut();
-      } catch {
-        // sessione già invalidata lato server
-      }
-      setUser(null);
-      router.push("/accesso");
-      router.refresh();
+      await esciDallAccount("/accesso");
     } catch {
       setEliminaErr("Errore di rete. Riprova.");
     } finally {
@@ -674,16 +667,8 @@ export default function AreaPersonalePage() {
           </Link>
           <button
             type="button"
-            onClick={async () => {
-              try {
-                const supabase = createBrowserSupabaseClient();
-                await supabase.auth.signOut();
-              } catch {
-                // ignora
-              }
-              setUser(null);
-              router.push("/accesso");
-              router.refresh();
+            onClick={() => {
+              void esciDallAccount("/accesso");
             }}
             className="rounded-lg bg-accent/40 px-4 py-2 font-semibold text-foreground hover:bg-accent/55"
           >
