@@ -8,8 +8,16 @@ import {
   formatOnesignalError,
   isOnesignalClientConfigured,
   resetOneSignalInit,
+  unregisterConflictingPushServiceWorkers,
 } from "@/lib/onesignal/client-init";
 import { urlBase64ToVapidKeyBuffer } from "@/lib/push-client";
+import {
+  etichettaPermessoNotifiche,
+  istruzioniPermessoNotifiche,
+  messaggioAttesaPopupPermesso,
+  permessoNotificheAttuale,
+  richiediPermessoNotifiche,
+} from "@/lib/notification-permission";
 import { withTimeout } from "@/lib/with-timeout";
 
 type Stato = "idle" | "loading" | "ok" | "err" | "non_supportato" | "no_key";
@@ -48,8 +56,16 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
     setMessaggio("Avvio OneSignal…");
 
     try {
+      setMessaggio("Preparazione service worker…");
       try {
-        await withTimeout(ensureOneSignalInit(), 20_000, "Inizializzazione OneSignal");
+        await withTimeout(unregisterConflictingPushServiceWorkers(), 8_000, "Service worker");
+      } catch {
+        // continua anche se la pulizia non riesce
+      }
+
+      setMessaggio("Caricamento SDK OneSignal…");
+      try {
+        await withTimeout(ensureOneSignalInit(), 35_000, "Inizializzazione OneSignal");
       } catch (e) {
         resetOneSignalInit();
         throw e;
@@ -62,22 +78,44 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
         // Il bridge in layout può aver già fatto login; continuiamo.
       }
 
-      setMessaggio("Il browser ti chiederà il permesso: scegli «Consenti».");
-      const permesso = await withTimeout(
-        (async () => {
-          const p = await Notification.requestPermission();
-          return p === "granted";
-        })(),
-        120_000,
-        "Permesso notifiche",
-      );
-
-      if (!permesso) {
+      const prima = permessoNotificheAttuale();
+      if (prima === "granted") {
+        setMessaggio("Permesso già concesso, registro il dispositivo…");
+      } else if (prima === "denied") {
         setStato("err");
-        setMessaggio(
-          "Permesso negato o bloccato. In Chrome: icona lucchetto nella barra indirizzi → Notifiche → Consenti, poi riprova.",
-        );
+        setMessaggio(istruzioniPermessoNotifiche());
         return;
+      } else {
+        setMessaggio(messaggioAttesaPopupPermesso());
+        const dopo = await withTimeout(
+          richiediPermessoNotifiche(20_000),
+          22_000,
+          "Permesso notifiche",
+        );
+
+        if (dopo !== "granted") {
+          let okOneSignal = false;
+          try {
+            okOneSignal = await withTimeout(
+              OneSignal.Notifications.requestPermission(),
+              12_000,
+              "Permesso OneSignal",
+            );
+          } catch {
+            okOneSignal = false;
+          }
+
+          const finale = permessoNotificheAttuale();
+          if (!okOneSignal && finale !== "granted") {
+            setStato("err");
+            setMessaggio(
+              dopo === "default"
+                ? `Non è comparso alcun popup. ${istruzioniPermessoNotifiche()}`
+                : istruzioniPermessoNotifiche(),
+            );
+            return;
+          }
+        }
       }
 
       setMessaggio("Registrazione dispositivo…");
@@ -225,8 +263,17 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
     return (
       <div className="space-y-2">
         <p className="text-xs text-muted">
-          Servizio <strong className="text-foreground">OneSignal</strong>. Usa Chrome o Edge su desktop per
-          risultati migliori.
+          Servizio <strong className="text-foreground">OneSignal</strong>. Consigliato:{" "}
+          <strong className="text-foreground">Chrome</strong> o <strong className="text-foreground">Edge</strong>{" "}
+          a schermo intero. Su <strong className="text-foreground">Brave</strong> abbassa Shields (leone) per questo
+          sito. In app tipo Cortana il popup spesso non compare: apri il sito in Chrome.
+          {permessoNotificheAttuale() !== "unsupported" ? (
+            <>
+              {" "}
+              Stato permesso ora:{" "}
+              <strong className="text-foreground">{etichettaPermessoNotifiche(permessoNotificheAttuale())}</strong>.
+            </>
+          ) : null}
         </p>
         <div className="flex flex-wrap gap-2">
           <button
