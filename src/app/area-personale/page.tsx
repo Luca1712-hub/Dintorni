@@ -292,7 +292,7 @@ export default function AreaPersonalePage() {
         setEliminaErr(msg ?? "Non è stato possibile eliminare l’account.");
         return;
       }
-      await esciDallAccount("/accesso");
+      esciDallAccount();
     } catch {
       setEliminaErr("Errore di rete. Riprova.");
     } finally {
@@ -668,7 +668,7 @@ export default function AreaPersonalePage() {
           <button
             type="button"
             onClick={() => {
-              void esciDallAccount("/accesso");
+              esciDallAccount();
             }}
             className="rounded-lg bg-accent/40 px-4 py-2 font-semibold text-foreground hover:bg-accent/55"
           >

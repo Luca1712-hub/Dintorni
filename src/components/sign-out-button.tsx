@@ -12,7 +12,7 @@ export function SignOutButton() {
       disabled={pending}
       onClick={() => {
         setPending(true);
-        void esciDallAccount("/accesso");
+        esciDallAccount();
       }}
       className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface-muted disabled:opacity-50"
     >

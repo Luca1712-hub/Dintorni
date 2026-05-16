@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getBrowserAuthUserId } from "@/lib/auth-client";
 import type { NegozioChatInit } from "@/lib/chat-negozio-init";
+import { inviaMessaggioChat } from "@/lib/chat-invio-client";
 import { parseAllegati, type AllegatoMessaggio } from "@/lib/chat-types";
 import { RISPOSTE_PREDEFINITE_NEGOZIO } from "@/lib/risposte-predefinite-negozio";
 import { useMessaggiConversazione } from "@/lib/use-messaggi-conversazione";
@@ -118,13 +118,7 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
       setError("La richiesta e` chiusa: non puoi inviare altri messaggi.");
       return;
     }
-    if (!conversazioneId || !myId) return;
-    const supabase = createBrowserSupabaseClient();
-    const userId = myId ?? (await getBrowserAuthUserId());
-    if (!userId) {
-      window.location.assign("/accesso");
-      return;
-    }
+    if (!conversazioneId) return;
 
     const testoPulito = testo.trim();
     if (testoPulito.length === 0 && files.length === 0) {
@@ -134,42 +128,22 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
 
     setInvio(true);
     try {
-      const allegati: AllegatoMessaggio[] = [];
-      for (const f of files) {
-        const ext = f.name.split(".").pop() || "jpg";
-        const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from(BUCKET)
-          .upload(path, f, { cacheControl: "3600", upsert: false });
-        if (upErr) {
-          setError(`Caricamento immagine fallito: ${upErr.message}`);
-          setInvio(false);
-          return;
-        }
-        const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
-        allegati.push({ url: pub.publicUrl, path, name: f.name });
-      }
-
-      const { error: msgErr } = await supabase.from("messaggi").insert({
-        conversazione_id: conversazioneId,
-        mittente_id: userId,
+      const esito = await inviaMessaggioChat({
+        conversazioneId,
         testo: testoPulito,
-        allegati,
+        files,
       });
 
-      if (msgErr) {
-        setError(
-          msgErr.message.includes("messaggi_ha_contenuto")
-            ? "Serve testo oppure almeno un'immagine."
-            : msgErr.message,
-        );
-        setInvio(false);
+      if (!esito.ok) {
+        setError(esito.error);
         return;
       }
 
       setTesto("");
       setFiles([]);
       ricarica();
+    } catch {
+      setError("Errore di rete. Controlla la connessione e riprova.");
     } finally {
       setInvio(false);
     }

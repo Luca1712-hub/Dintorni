@@ -16,6 +16,7 @@ import {
 } from "@/lib/unread-chat";
 import type { RichiestaStato } from "@/lib/richiesta";
 import { useRichiestaStato } from "@/lib/use-richiesta-stato";
+import { inviaMessaggioChat } from "@/lib/chat-invio-client";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -234,43 +235,33 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
       setError("La richiesta e` chiusa: non puoi inviare altri messaggi.");
       return;
     }
-    if (!selezionata || !myId) return;
-    const supabase = createBrowserSupabaseClient();
+    if (!selezionata) return;
+
     const testoPulito = testo.trim();
     if (testoPulito.length === 0 && files.length === 0) {
       setError("Scrivi un messaggio oppure allega un'immagine.");
       return;
     }
+
     setInvio(true);
     try {
-      const allegati: AllegatoMessaggio[] = [];
-      for (const f of files) {
-        const ext = f.name.split(".").pop() || "jpg";
-        const path = `${myId}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from(BUCKET)
-          .upload(path, f, { cacheControl: "3600", upsert: false });
-        if (upErr) {
-          setError(`Caricamento immagine fallito: ${upErr.message}`);
-          return;
-        }
-        const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
-        allegati.push({ url: pub.publicUrl, path, name: f.name });
-      }
-      const { error: msgErr } = await supabase.from("messaggi").insert({
-        conversazione_id: selezionata,
-        mittente_id: myId,
+      const esito = await inviaMessaggioChat({
+        conversazioneId: selezionata,
         testo: testoPulito,
-        allegati,
+        files,
       });
-      if (msgErr) {
-        setError(msgErr.message);
+
+      if (!esito.ok) {
+        setError(esito.error);
         return;
       }
+
       setTesto("");
       setFiles([]);
       ricarica();
       void aggiornaBadgeNonLetti();
+    } catch {
+      setError("Errore di rete. Controlla la connessione e riprova.");
     } finally {
       setInvio(false);
     }
