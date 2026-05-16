@@ -478,7 +478,7 @@ export function AreaPersonalePanel({ userId, initialUser }: Props) {
               Chrome o Edge consigliati. Su iOS le notifiche web hanno limitazioni note.
             </p>
             <div className="mt-3">
-              <NotifichePushSetup abilitato={user.notifichePush} />
+              <NotifichePushSetup abilitato={user.notifichePush} userId={userId} />
             </div>
           </div>
         </section>

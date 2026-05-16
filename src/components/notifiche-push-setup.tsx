@@ -13,7 +13,7 @@ import { urlBase64ToVapidKeyBuffer } from "@/lib/push-client";
 
 type Stato = "idle" | "loading" | "ok" | "err" | "non_supportato" | "no_key";
 
-export function NotifichePushSetup(props: { abilitato: boolean }) {
+export function NotifichePushSetup(props: { abilitato: boolean; userId: string }) {
   const [stato, setStato] = useState<Stato>("idle");
   const [messaggio, setMessaggio] = useState("");
 
@@ -44,18 +44,8 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
       await unregisterConflictingPushServiceWorkers();
       await ensureOneSignalInit();
 
-      const supabase = createBrowserSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setStato("err");
-        setMessaggio("Devi essere connesso.");
-        return;
-      }
-
       try {
-        await OneSignal.login(user.id);
+        await OneSignal.login(props.userId);
       } catch (e) {
         setStato("err");
         setMessaggio(`OneSignal login: ${formatOnesignalError(e)}`);
@@ -95,8 +85,10 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     } catch (e) {
       setStato("err");
       setMessaggio(`OneSignal: ${formatOnesignalError(e)}`);
+    } finally {
+      setStato((s) => (s === "loading" ? "idle" : s));
     }
-  }, [props.abilitato]);
+  }, [props.abilitato, props.userId]);
 
   const disattivaOnesignal = useCallback(async () => {
     setMessaggio("");
@@ -109,6 +101,8 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     } catch (e) {
       setStato("err");
       setMessaggio(e instanceof Error ? e.message : "Errore.");
+    } finally {
+      setStato((s) => (s === "loading" ? "idle" : s));
     }
   }, []);
 
@@ -156,18 +150,9 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
       }
 
       const supabase = createBrowserSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setStato("err");
-        setMessaggio("Devi essere connesso.");
-        return;
-      }
-
       const { error } = await supabase.from("push_subscriptions").upsert(
         {
-          user_id: user.id,
+          user_id: props.userId,
           endpoint: json.endpoint,
           p256dh: json.keys.p256dh,
           auth: json.keys.auth,
@@ -184,8 +169,10 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     } catch (e) {
       setStato("err");
       setMessaggio(e instanceof Error ? e.message : "Errore durante la registrazione.");
+    } finally {
+      setStato((s) => (s === "loading" ? "idle" : s));
     }
-  }, [props.abilitato, vapidPublic]);
+  }, [props.abilitato, props.userId, vapidPublic]);
 
   const disattivaVapid = useCallback(async () => {
     setMessaggio("");
@@ -194,13 +181,14 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = await reg?.pushManager.getSubscription();
       if (sub) {
-        const supabase = createBrowserSupabaseClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
         const json = sub.toJSON();
-        if (json.endpoint && user) {
-          await supabase.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", json.endpoint);
+        if (json.endpoint) {
+          const supabase = createBrowserSupabaseClient();
+          await supabase
+            .from("push_subscriptions")
+            .delete()
+            .eq("user_id", props.userId)
+            .eq("endpoint", json.endpoint);
         }
         await sub.unsubscribe();
       }
@@ -209,8 +197,10 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     } catch (e) {
       setStato("err");
       setMessaggio(e instanceof Error ? e.message : "Errore.");
+    } finally {
+      setStato((s) => (s === "loading" ? "idle" : s));
     }
-  }, []);
+  }, [props.userId]);
 
   if (stato === "non_supportato") {
     return (
