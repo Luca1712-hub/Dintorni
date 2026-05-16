@@ -45,19 +45,27 @@ export function PushDiagnostica() {
     try {
       const res = await fetch("/api/push/prova", { method: "POST", credentials: "include" });
       const json = (await res.json()) as {
-        messaggio?: string;
+        messaggio?: string | null;
         onesignalNotificationId?: string | null;
         dispositiviTarget?: number;
         inviata?: boolean;
+        errore?: string | null;
         error?: string;
       };
       if (!res.ok) {
-        setErr(json.error ?? "Invio prova fallito");
+        setErr(json.error ?? json.errore ?? "Invio prova fallito");
+        return;
+      }
+      if (!json.inviata) {
+        setErr(
+          json.errore ??
+            `OneSignal ha rifiutato l'invio (target: ${json.dispositiviTarget ?? 0} device).`,
+        );
         return;
       }
       const id = json.onesignalNotificationId;
       setProva(
-        `${json.messaggio ?? ""}${id ? ` ID OneSignal: ${id}` : ""} (target: ${json.dispositiviTarget ?? 0} device)`,
+        `${json.messaggio ?? "Push inviata."}${id ? ` ID: ${id}` : ""} (target: ${json.dispositiviTarget ?? 0} device)`,
       );
     } catch {
       setErr("Invio prova fallito.");

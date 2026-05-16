@@ -43,8 +43,9 @@ export async function POST() {
     inviata: result.sent,
     dispositiviTarget: result.targetedSubscriptions,
     onesignalNotificationId: result.notificationId ?? null,
+    errore: result.errore ?? null,
     messaggio: result.sent
-      ? "Push inviata. Controlla il dispositivo (anche in background). L'ID sotto serve per il supporto; spesso non compare in Messages del pannello."
-      : "OneSignal non ha accettato l'invio. Controlla subscription attive in Diagnostica.",
+      ? "Push inviata. Controlla se compare il popup del browser (anche con finestra in secondo piano)."
+      : null,
   });
 }
