@@ -31,7 +31,9 @@ function isWebPushType(type: string | undefined): boolean {
 
 export function isSubscriptionAndroid(sub: OnesignalSubscriptionRow): boolean {
   const os = (sub.device_os ?? "").toLowerCase();
-  return os.includes("android");
+  if (os.includes("android")) return true;
+  // Chrome su Android spesso riporta "Linux armv8l" / "Linux armv81", non "Android"
+  return os.includes("linux") && os.includes("arm");
 }
 
 /** Subscription web push attive (Chrome desktop, Chrome Android, ecc.). */

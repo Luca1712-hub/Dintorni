@@ -486,7 +486,7 @@ export function AreaPersonalePanel({ userId, initialUser }: Props) {
             </p>
             <div className="mt-3">
               <NotifichePushSetup abilitato={user.notifichePush} userId={userId} />
-              <PushDiagnostica />
+              <PushDiagnostica userId={userId} />
             </div>
           </div>
         </section>
