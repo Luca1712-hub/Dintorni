@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { DintorniUserProfile } from "@/lib/profile";
 import { NotifichePushSetup } from "@/components/notifiche-push-setup";
+import { PushDiagnostica } from "@/components/push-diagnostica";
 import { SelettoreProvinciaComune } from "@/components/selettore-provincia-comune";
 import { CATEGORIE_MERCEOLOGICHE } from "@/lib/categorie-negozio";
 import { geocodeViaEComune } from "@/lib/geocode-negozio-client";
@@ -485,6 +486,7 @@ export function AreaPersonalePanel({ userId, initialUser }: Props) {
             </p>
             <div className="mt-3">
               <NotifichePushSetup abilitato={user.notifichePush} userId={userId} />
+              <PushDiagnostica />
             </div>
           </div>
         </section>

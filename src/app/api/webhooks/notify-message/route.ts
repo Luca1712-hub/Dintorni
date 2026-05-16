@@ -144,10 +144,13 @@ export async function POST(request: Request) {
 
   let pushInviati = 0;
   let skippedPushReason: "off" | "none" | undefined;
+  let pushCanale: "onesignal" | "vapid" | "none" = "none";
+  let onesignalNotificationId: string | undefined;
 
   if (!pushOn) {
     skippedPushReason = "off";
   } else if (isOnesignalPushConfigured()) {
+    pushCanale = "onesignal";
     try {
       const result = await sendOnesignalPushToUser({
         externalUserId: destinatarioId,
@@ -155,6 +158,7 @@ export async function POST(request: Request) {
         body: anteprima,
         url: chatUrl,
       });
+      onesignalNotificationId = result.notificationId;
       pushInviati = result.sent ? Math.max(1, result.targetedSubscriptions) : 0;
       if (!result.sent) {
         skippedPushReason = "none";
@@ -164,12 +168,22 @@ export async function POST(request: Request) {
           "subscription target:",
           result.targetedSubscriptions,
         );
+      } else {
+        console.info(
+          "[notify-message] OneSignal ok",
+          destinatarioId,
+          "notificationId:",
+          result.notificationId,
+          "targets:",
+          result.targetedSubscriptions,
+        );
       }
     } catch (e) {
       console.error("[notify-message] OneSignal", e);
       skippedPushReason = "none";
     }
   } else {
+    pushCanale = "vapid";
     const publicVapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     const privateVapid = process.env.VAPID_PRIVATE_KEY;
     const vapidMailto = process.env.VAPID_MAILTO || "mailto:notify@dintorni.app";
@@ -217,6 +231,8 @@ export async function POST(request: Request) {
     ok: true,
     email: emailInviata,
     push: pushInviati,
+    pushCanale,
+    onesignalNotificationId: onesignalNotificationId ?? null,
     skippedEmail: !emailOn || !resendKey,
     skippedPush: Boolean(skippedPushReason),
   });
