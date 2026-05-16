@@ -92,7 +92,6 @@ export async function sendOnesignalPushToUser(
     name: "Messaggio chat",
     headings: { it: params.title, en: params.title },
     contents: { it: params.body, en: params.body },
-    url: params.url,
     web_url: params.url,
   };
 
