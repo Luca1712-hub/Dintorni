@@ -14,7 +14,12 @@ type Diagnostica = {
   onesignal?: {
     webPushAttive: number;
     androidWebPushAttive: number;
-    subscriptions: Array<{ id?: string; type?: string; device_os?: string }>;
+    subscriptions: Array<{
+      id?: string;
+      type?: string;
+      device_os?: string;
+      notification_types?: number;
+    }>;
   } | null;
   nota?: string;
 };
@@ -83,6 +88,31 @@ export function PushDiagnostica(props: { userId: string }) {
     }
   }, [props.userId]);
 
+  const testAvvisoChrome = useCallback(() => {
+    setErr("");
+    setProva("");
+    if (!("Notification" in window)) {
+      setErr("Questo browser non supporta le notifiche.");
+      return;
+    }
+    if (Notification.permission !== "granted") {
+      setErr("Permesso non concesso. Usa «Attiva notifiche» prima.");
+      return;
+    }
+    try {
+      const n = new Notification("Test Chrome — Dintorni", {
+        body: "Se vedi questo, Android consente avvisi da Chrome per questo sito.",
+        tag: "dintorni-test-locale",
+      });
+      n.onclick = () => window.focus();
+      setProva(
+        "Test locale inviato. Se non compare un avviso, il blocco è Android/Chrome (non OneSignal).",
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Test locale fallito.");
+    }
+  }, []);
+
   const inviaProva = useCallback(async () => {
     setErr("");
     setProva("");
@@ -134,6 +164,14 @@ export function PushDiagnostica(props: { userId: string }) {
         <button
           type="button"
           disabled={loading}
+          onClick={() => testAvvisoChrome()}
+          className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium hover:bg-surface-muted disabled:opacity-50"
+        >
+          Test avviso Chrome
+        </button>
+        <button
+          type="button"
+          disabled={loading}
           onClick={() => void inviaProva()}
           className="rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
         >
@@ -163,11 +201,15 @@ export function PushDiagnostica(props: { userId: string }) {
           </li>
           {info.onesignal?.subscriptions?.length ? (
             <li className="pt-1">
-              {info.onesignal.subscriptions.map((s, i) => (
-                <span key={s.id ?? i} className="block pl-2 text-foreground">
-                  · {etichettaOs(s.device_os)} — {s.device_os ?? "?"}
-                </span>
-              ))}
+              {info.onesignal.subscriptions.map((s, i) => {
+                const ok = s.notification_types === 1 || s.notification_types === undefined;
+                return (
+                  <span key={s.id ?? i} className="block pl-2 text-foreground">
+                    · {etichettaOs(s.device_os)} — {s.device_os ?? "?"}
+                    {ok ? " · invio consentito" : ` · bloccato (cod. ${s.notification_types})`}
+                  </span>
+                );
+              })}
             </li>
           ) : null}
         </ul>

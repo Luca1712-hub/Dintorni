@@ -59,6 +59,7 @@ export async function GET() {
           type: s.type,
           device_os: s.device_os,
           enabled: s.enabled,
+          notification_types: s.notification_types,
         })),
       };
     }

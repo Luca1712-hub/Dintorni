@@ -9,6 +9,8 @@ export type OnesignalSubscriptionRow = {
   token?: string;
   web_auth?: string;
   web_p256?: string;
+  /** 1 = iscritto; valori negativi = disiscritto / bloccato (vedi doc OneSignal). */
+  notification_types?: number;
 };
 
 export type OnesignalUserView = {
