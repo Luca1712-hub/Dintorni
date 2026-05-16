@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import OneSignal from "react-onesignal";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { ensureOneSignalInit, isOnesignalClientConfigured } from "@/lib/onesignal/client-init";
+import {
+  ensureOneSignalInit,
+  isOnesignalClientConfigured,
+  resetOneSignalInit,
+  unregisterAllServiceWorkers,
+} from "@/lib/onesignal/client-init";
 import { urlBase64ToVapidKeyBuffer } from "@/lib/push-client";
 
 type Stato = "idle" | "loading" | "ok" | "err" | "non_supportato" | "no_key";
@@ -36,6 +41,8 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
     }
     setStato("loading");
     try {
+      await unregisterAllServiceWorkers();
+      resetOneSignalInit();
       await ensureOneSignalInit();
       const supabase = createBrowserSupabaseClient();
       const {
@@ -56,6 +63,16 @@ export function NotifichePushSetup(props: { abilitato: boolean }) {
       }
 
       await OneSignal.User.PushSubscription.optIn();
+
+      const regs = await navigator.serviceWorker.getRegistrations();
+      const onesignalReg = regs.some((r) => r.scope.includes("/onesignal/"));
+      if (!onesignalReg) {
+        setStato("err");
+        setMessaggio(
+          "OneSignal non ha registrato il service worker. Ricarica la pagina e riprova; in Console non devono restare errori OneSignal.",
+        );
+        return;
+      }
 
       setStato("ok");
       setMessaggio("Notifiche push (OneSignal) attive su questo dispositivo.");
