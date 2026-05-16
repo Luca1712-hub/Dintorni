@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { parseAllegati } from "@/lib/chat-types";
 import {
   formatoZonaRichiesta,
@@ -13,112 +12,44 @@ import { fetchUnreadByRichiesta } from "@/lib/unread-chat";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
-export function RichiesteNegozioList() {
-  const router = useRouter();
-  const [ready, setReady] = useState(false);
-  const [isNegozio, setIsNegozio] = useState<boolean | null>(null);
-  const [nomeNegozio, setNomeNegozio] = useState<string | null>(null);
-  const [categorieNegozio, setCategorieNegozio] = useState<string[]>([]);
-  const [rows, setRows] = useState<RichiestaRow[]>([]);
-  const [loadError, setLoadError] = useState("");
+export type RichiesteNegozioServerData = {
+  isNegozio: boolean;
+  nomeNegozio: string | null;
+  categorieNegozio: string[];
+  rows: RichiestaRow[];
+  loadError: string;
+};
+
+type Props = {
+  serverData: RichiesteNegozioServerData;
+};
+
+export function RichiesteNegozioList({ serverData }: Props) {
+  const { isNegozio, nomeNegozio, categorieNegozio, rows, loadError } = serverData;
   const [unreadByRichiesta, setUnreadByRichiesta] = useState<Map<string, number>>(new Map());
 
-  const load = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setLoadError("Supabase non configurato.");
-      setReady(true);
-      return;
-    }
-    try {
-      const supabase = createBrowserSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        router.replace("/accesso");
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("ruolo, nome_negozio, categorie_merceologiche")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profile?.ruolo !== "negozio") {
-        setIsNegozio(false);
-        setReady(true);
-        return;
-      }
-
-      setIsNegozio(true);
-      setNomeNegozio(
-        typeof profile.nome_negozio === "string" ? profile.nome_negozio : null,
-      );
-      setCategorieNegozio(
-        parseCategorieRichiesta(profile.categorie_merceologiche),
-      );
-
-      const { data, error } = await supabase
-        .from("richieste")
-        .select("*")
-        .eq("stato", "aperta")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        setLoadError(
-          error.code === "42501" || error.message.toLowerCase().includes("policy")
-            ? "Permessi mancanti: esegui in Supabase lo SQL per le policy negozio (es. `supabase/negozio_geo_filtri_e_chat_chiusa.sql` o `supabase/richieste_negozio_select.sql`)."
-            : error.message,
-        );
-        setRows([]);
-        setReady(true);
-        return;
-      }
-
-      setRows((data ?? []) as RichiestaRow[]);
-      setLoadError("");
-      const unreadMap = await fetchUnreadByRichiesta(supabase);
-      setUnreadByRichiesta(unreadMap);
-    } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Errore di caricamento.");
-      setRows([]);
-    } finally {
-      setReady(true);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
   const aggiornaNonLetti = useCallback(async () => {
-    if (!isSupabaseConfigured() || rows.length === 0) return;
+    if (!isSupabaseConfigured() || !isNegozio) return;
     const supabase = createBrowserSupabaseClient();
     const map = await fetchUnreadByRichiesta(supabase);
     setUnreadByRichiesta(map);
-  }, [rows.length]);
+  }, [isNegozio]);
 
   useEffect(() => {
-    if (rows.length === 0) return;
+    void aggiornaNonLetti();
+  }, [aggiornaNonLetti]);
+
+  useEffect(() => {
+    if (!isNegozio || rows.length === 0) return;
     const t = setInterval(() => {
       void aggiornaNonLetti();
     }, 20000);
     return () => clearInterval(t);
-  }, [rows.length, aggiornaNonLetti]);
+  }, [isNegozio, rows.length, aggiornaNonLetti]);
 
-  if (!ready) {
+  if (!isNegozio) {
     return (
       <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
-        <p className="text-muted">Caricamento…</p>
-      </div>
-    );
-  }
-
-  if (isNegozio === false) {
-    return (
-      <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
-        <h1 className="text-2xl font-bold">Richieste in arrivo</h1>
         <p className="mt-2 text-muted">
           Questa sezione e` dedicata ai negozi. Il tuo account e` registrato come acquirente.
         </p>
@@ -135,7 +66,7 @@ export function RichiesteNegozioList() {
   if (loadError) {
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-red-900">Richieste in arrivo</h1>
+        <h2 className="text-xl font-bold text-red-900">Errore caricamento</h2>
         <p className="mt-2 text-sm text-red-800">{loadError}</p>
         <Link
           href="/dashboard"
