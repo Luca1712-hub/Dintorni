@@ -36,6 +36,8 @@ type ConvLabel = ConversazioneRow & { etichetta: string; nonLetti?: number };
 export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Props) {
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
+  /** Evita di forzare di nuovo ?conversazione= quando la lista si aggiorna (polling su mobile). */
+  const selezioneInizialeApplicata = useRef(false);
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -182,8 +184,13 @@ export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Prop
   }, [richiestaId, router]);
 
   useEffect(() => {
-    if (conversazioni.length === 0) return;
+    selezioneInizialeApplicata.current = false;
+  }, [richiestaId]);
 
+  useEffect(() => {
+    if (conversazioni.length === 0 || selezioneInizialeApplicata.current) return;
+
+    selezioneInizialeApplicata.current = true;
     const preferita = conversazioneIniziale?.trim();
     if (preferita && conversazioni.some((c) => c.id === preferita)) {
       setSelezionata(preferita);
@@ -196,6 +203,16 @@ export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Prop
       return conNonLetti?.id ?? conversazioni[0].id;
     });
   }, [conversazioni, conversazioneIniziale]);
+
+  const selezionaConversazione = useCallback(
+    (conversazioneId: string) => {
+      setSelezionata(conversazioneId);
+      if (conversazioneIniziale?.trim()) {
+        router.replace(`/dashboard/le-mie-richieste/${richiestaId}/chat`, { scroll: false });
+      }
+    },
+    [conversazioneIniziale, richiestaId, router],
+  );
 
   useEffect(() => {
     if (conversazioni.length === 0) return;
@@ -356,9 +373,7 @@ export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Prop
               <button
                 key={c.id}
                 type="button"
-                onClick={() => {
-                  setSelezionata(c.id);
-                }}
+                onClick={() => selezionaConversazione(c.id)}
                 className={
                   selezionata === c.id
                     ? "inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white"
