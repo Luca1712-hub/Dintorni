@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { mapAuthErrorToMessage } from "@/lib/auth-errors";
+import { PasswordInput } from "@/components/password-input";
 import { SelettoreProvinciaComune } from "@/components/selettore-provincia-comune";
 import { CATEGORIE_MERCEOLOGICHE } from "@/lib/categorie-negozio";
 import { geocodeViaEComune } from "@/lib/geocode-negozio-client";
@@ -377,41 +378,26 @@ export default function RegistrazionePage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={MIN_PASSWORD_LENGTH}
-              autoComplete="new-password"
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
-              placeholder={`Almeno ${MIN_PASSWORD_LENGTH} caratteri`}
-            />
-          </div>
+          <PasswordInput
+            id="password"
+            label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
+            placeholder={`Almeno ${MIN_PASSWORD_LENGTH} caratteri`}
+          />
 
-          <div>
-            <label
-              htmlFor="confermaPassword"
-              className="mb-1 block text-sm font-medium"
-            >
-              Conferma password
-            </label>
-            <input
-              id="confermaPassword"
-              type="password"
-              value={confermaPassword}
-              onChange={(e) => setConfermaPassword(e.target.value)}
-              required
-              minLength={MIN_PASSWORD_LENGTH}
-              autoComplete="new-password"
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
-            />
-          </div>
+          <PasswordInput
+            id="confermaPassword"
+            label="Conferma password"
+            value={confermaPassword}
+            onChange={(e) => setConfermaPassword(e.target.value)}
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
+          />
 
           <div className="space-y-2 rounded-lg bg-surface-muted p-4">
             <label className="flex items-start gap-2 text-sm">

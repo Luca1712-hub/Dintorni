@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { PasswordInput } from "@/components/password-input";
 import { sanitizeSiteAccessNext } from "@/lib/site-access";
 
 export function SiteAccessForm() {
@@ -51,20 +52,14 @@ export function SiteAccessForm() {
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
-          <div>
-            <label htmlFor="site-password" className="mb-1 block text-sm font-medium">
-              Password
-            </label>
-            <input
-              id="site-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-primary"
-            />
-          </div>
+          <PasswordInput
+            id="site-password"
+            label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
 
           {errore ? <p className="text-sm font-medium text-red-600">{errore}</p> : null}
 
