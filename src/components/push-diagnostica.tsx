@@ -104,22 +104,24 @@ export function PushDiagnostica(props: { userId: string }) {
       return;
     }
     try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      const reg =
-        regs.find((r) => r.scope.includes("/onesignal")) ??
-        regs.find((r) => r.scope.includes(location.origin)) ??
-        regs[0];
-      if (!reg) {
-        setErr("Nessun service worker attivo. Premi prima «Attiva notifiche», poi riprova.");
+      const reg = await navigator.serviceWorker.ready;
+      const scope = reg.scope;
+      const tag = "dintorni-test-sw";
+      await reg.showNotification("Test Chrome — Dintorni", {
+        body: "Avviso di prova dal service worker (come le push vere).",
+        tag,
+        requireInteraction: true,
+      });
+      const attive = await reg.getNotifications({ tag });
+      if (attive.length === 0) {
+        setErr(
+          "Il service worker non ha creato l'avviso. Premi «Attiva notifiche», ricarica la pagina e riprova.",
+        );
         return;
       }
-      await reg.showNotification("Test Chrome — Dintorni", {
-        body: "Se vedi questo, Chrome può mostrare avvisi (service worker OK).",
-        tag: "dintorni-test-sw",
-        icon: "/favicon.ico",
-      });
       setProva(
-        "Test inviato tramite service worker (come le push vere). Compare l'avviso?",
+        `Richiesta inviata (scope: ${scope}). In alto dovrebbe comparire «Test Chrome — Dintorni». ` +
+          `Se non vedi nulla ma il permesso è sì, Android sta bloccando gli avvisi di Chrome.`,
       );
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Test service worker fallito.");

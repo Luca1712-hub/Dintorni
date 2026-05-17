@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { NegozioChatInit } from "@/lib/chat-negozio-init";
+import { ImageAttachButtons } from "@/components/image-attach-buttons";
 import { inviaMessaggioChat } from "@/lib/chat-invio-client";
 import { parseAllegati, type AllegatoMessaggio } from "@/lib/chat-types";
 import { RISPOSTE_PREDEFINITE_NEGOZIO } from "@/lib/risposte-predefinite-negozio";
@@ -23,7 +24,6 @@ type Props = { richiestaId: string; serverInit: NegozioChatInit };
 
 export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [error, setError] = useState(serverInit.ok ? "" : serverInit.error);
   const [richiestaTesto] = useState<string | null>(
@@ -105,7 +105,6 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
       next.push(f);
     }
     setFiles(next);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const rimuoviFile = (idx: number) => {
@@ -330,22 +329,12 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
         />
 
         <div className="flex flex-wrap items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => onFilePick(e.target.files)}
-          />
-          <button
-            type="button"
+          <ImageAttachButtons
+            onPick={onFilePick}
             disabled={richiestaChiusa}
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Allega immagini ({files.length}/{MAX_IMMAGINI}, max {MAX_MB} MB cad.)
-          </button>
+            multiple
+            galleryLabel={`Galleria (${files.length}/${MAX_IMMAGINI})`}
+          />
           <button
             type="button"
             disabled={invio || richiestaChiusa}

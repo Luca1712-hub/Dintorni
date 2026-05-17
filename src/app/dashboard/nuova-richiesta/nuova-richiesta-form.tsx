@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { ImageAttachButtons } from "@/components/image-attach-buttons";
 import { useRouter } from "next/navigation";
 import {
   MAX_COMUNI_RICHIESTA,
@@ -49,7 +50,6 @@ export function NuovaRichiestaForm() {
   );
   const [categorie, setCategorie] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [errore, setErrore] = useState("");
   const [caricamento, setCaricamento] = useState(false);
@@ -163,7 +163,6 @@ export function NuovaRichiestaForm() {
       next.push(f);
     }
     setFiles(next);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const rimuoviFile = (idx: number) => {
@@ -379,24 +378,10 @@ export function NuovaRichiestaForm() {
         <div>
           <p className="text-sm font-medium text-foreground">Foto (facoltativo)</p>
           <p className="mt-1 text-xs text-subtle">
-            Fino a {MAX_IMMAGINI_RICHIESTA} immagini, max {MAX_MB_IMMAGINE} MB ciascuna. Visibili ai negozi insieme al testo della richiesta.
+            Fino a {MAX_IMMAGINI_RICHIESTA} immagini, max {MAX_MB_IMMAGINE} MB ciascuna. Da galleria o fotocamera.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              id="richiesta-foto"
-              onChange={(ev) => onFilePick(ev.target.files)}
-            />
-            <label
-              htmlFor="richiesta-foto"
-              className="cursor-pointer rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-muted"
-            >
-              Scegli foto
-            </label>
+            <ImageAttachButtons onPick={onFilePick} multiple galleryLabel="Scegli da galleria" />
             <span className="text-xs text-muted">
               {files.length} / {MAX_IMMAGINI_RICHIESTA}
             </span>

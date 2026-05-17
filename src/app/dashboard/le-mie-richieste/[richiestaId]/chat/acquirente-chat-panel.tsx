@@ -16,6 +16,7 @@ import {
 } from "@/lib/unread-chat";
 import type { RichiestaStato } from "@/lib/richiesta";
 import { useRichiestaStato } from "@/lib/use-richiesta-stato";
+import { ImageAttachButtons } from "@/components/image-attach-buttons";
 import { inviaMessaggioChat } from "@/lib/chat-invio-client";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -31,7 +32,6 @@ type ConvLabel = ConversazioneRow & { etichetta: string; nonLetti?: number };
 export function AcquirenteChatPanel({ richiestaId }: Props) {
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -222,7 +222,6 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
       next.push(f);
     }
     setFiles(next);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const rimuoviFile = (idx: number) => {
@@ -471,23 +470,13 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
               className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-subtle"
               placeholder="Scrivi un messaggio al negozio…"
             />
-            <div className="flex flex-wrap gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => onFilePick(e.target.files)}
-              />
-              <button
-                type="button"
+            <div className="flex flex-wrap items-center gap-2">
+              <ImageAttachButtons
+                onPick={onFilePick}
                 disabled={richiestaChiusa}
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Allega immagini ({files.length}/{MAX_IMMAGINI})
-              </button>
+                multiple
+                galleryLabel={`Galleria (${files.length}/${MAX_IMMAGINI})`}
+              />
               <button
                 type="button"
                 disabled={invio || richiestaChiusa}
