@@ -80,7 +80,7 @@ export async function SiteHeader() {
                 href="/area-personale"
                 className="rounded-md px-3 py-1.5 font-medium text-muted hover:bg-surface-muted"
               >
-                Profilo
+                Area personale
               </Link>
               <SignOutButton />
             </nav>
