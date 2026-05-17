@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AcquirenteChatPanel } from "./acquirente-chat-panel";
 
-type PageProps = { params: Promise<{ richiestaId: string }> };
+type PageProps = {
+  params: Promise<{ richiestaId: string }>;
+  searchParams: Promise<{ conversazione?: string }>;
+};
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   await params;
@@ -11,8 +14,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function AcquirenteRichiestaChatPage({ params }: PageProps) {
+export default async function AcquirenteRichiestaChatPage({ params, searchParams }: PageProps) {
   const { richiestaId } = await params;
+  const { conversazione: conversazioneIniziale } = await searchParams;
 
   return (
     <main className="flex-1 bg-background px-4 py-10 text-foreground sm:px-6">
@@ -27,7 +31,10 @@ export default async function AcquirenteRichiestaChatPage({ params }: PageProps)
           Qui vedi i messaggi dei negozi che rispondono. Puoi scrivere e allegare immagini.
         </p>
         <div className="mt-6">
-          <AcquirenteChatPanel richiestaId={richiestaId} />
+          <AcquirenteChatPanel
+            richiestaId={richiestaId}
+            conversazioneIniziale={conversazioneIniziale?.trim() || undefined}
+          />
         </div>
       </div>
     </main>

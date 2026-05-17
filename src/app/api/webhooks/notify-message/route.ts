@@ -94,7 +94,7 @@ export async function POST(request: Request) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
   const chatPath =
     destinatarioId === conv.acquirente_id
-      ? `/dashboard/le-mie-richieste/${conv.richiesta_id}/chat`
+      ? `/dashboard/le-mie-richieste/${conv.richiesta_id}/chat?conversazione=${encodeURIComponent(conversazioneId)}`
       : `/dashboard/richieste-in-arrivo/${conv.richiesta_id}/chat`;
   const chatUrl = `${baseUrl}${chatPath}`;
 

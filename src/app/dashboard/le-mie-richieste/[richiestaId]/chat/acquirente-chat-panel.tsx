@@ -25,11 +25,15 @@ const BUCKET = "messaggi-allegati";
 const MAX_IMMAGINI = 6;
 const MAX_MB = 5;
 
-type Props = { richiestaId: string };
+type Props = {
+  richiestaId: string;
+  /** Da URL notifica/email (?conversazione=uuid) per aprire il negozio giusto. */
+  conversazioneIniziale?: string;
+};
 
 type ConvLabel = ConversazioneRow & { etichetta: string; nonLetti?: number };
 
-export function AcquirenteChatPanel({ richiestaId }: Props) {
+export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Props) {
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -179,8 +183,19 @@ export function AcquirenteChatPanel({ richiestaId }: Props) {
 
   useEffect(() => {
     if (conversazioni.length === 0) return;
-    setSelezionata((prev) => prev ?? conversazioni[0].id);
-  }, [conversazioni]);
+
+    const preferita = conversazioneIniziale?.trim();
+    if (preferita && conversazioni.some((c) => c.id === preferita)) {
+      setSelezionata(preferita);
+      return;
+    }
+
+    setSelezionata((prev) => {
+      if (prev && conversazioni.some((c) => c.id === prev)) return prev;
+      const conNonLetti = conversazioni.find((c) => (c.nonLetti ?? 0) > 0);
+      return conNonLetti?.id ?? conversazioni[0].id;
+    });
+  }, [conversazioni, conversazioneIniziale]);
 
   useEffect(() => {
     if (conversazioni.length === 0) return;
