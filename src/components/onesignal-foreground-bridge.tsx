@@ -3,14 +3,20 @@
 import { useEffect } from "react";
 import OneSignal from "react-onesignal";
 import { ensureOneSignalInit, isOnesignalClientConfigured } from "@/lib/onesignal/client-init";
+import { navigaSeDiverso, urlDaClickNotifica } from "@/lib/onesignal/notification-click-url";
 
-/** Su alcuni browser (es. Chrome Android) in primo piano serve display() esplicito. */
+/** Foreground display + navigazione al tap (es. Chrome Android con tab su /dashboard). */
 export function OneSignalForegroundBridge() {
   useEffect(() => {
     if (!isOnesignalClientConfigured()) return;
 
+    let cancelled = false;
+    let removeListeners: (() => void) | undefined;
+
     void ensureOneSignalInit().then(() => {
-      const handler = (event: {
+      if (cancelled) return;
+
+      const onForeground = (event: {
         preventDefault: () => void;
         notification: { display: () => void };
       }) => {
@@ -21,8 +27,25 @@ export function OneSignalForegroundBridge() {
           /* alcuni browser non supportano preventDefault */
         }
       };
-      OneSignal.Notifications.addEventListener("foregroundWillDisplay", handler);
+
+      const onClick = (event: unknown) => {
+        const url = urlDaClickNotifica(event);
+        if (url) navigaSeDiverso(url);
+      };
+
+      OneSignal.Notifications.addEventListener("foregroundWillDisplay", onForeground);
+      OneSignal.Notifications.addEventListener("click", onClick);
+
+      removeListeners = () => {
+        OneSignal.Notifications.removeEventListener("foregroundWillDisplay", onForeground);
+        OneSignal.Notifications.removeEventListener("click", onClick);
+      };
     });
+
+    return () => {
+      cancelled = true;
+      removeListeners?.();
+    };
   }, []);
 
   return null;

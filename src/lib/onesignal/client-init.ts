@@ -108,6 +108,9 @@ export function ensureOneSignalInit(): Promise<void> {
         appId,
         autoRegister: false,
         autoResubscribe: true,
+        /** Tab già aperta su /dashboard → vai all'URL della push (chat), non solo in primo piano. */
+        notificationClickHandlerMatch: "origin",
+        notificationClickHandlerAction: "navigate",
         serviceWorkerPath: "/onesignal/OneSignalSDKWorker.js",
         serviceWorkerUpdaterPath: "/onesignal/OneSignalSDKUpdaterWorker.js",
         serviceWorkerParam: { scope: "/onesignal/" },
