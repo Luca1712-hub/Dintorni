@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { NegozioChatInit } from "@/lib/chat-negozio-init";
 import { ImageAttachButtons } from "@/components/image-attach-buttons";
 import { inviaMessaggioChat } from "@/lib/chat-invio-client";
+import { useScrollChatInFondo } from "@/lib/use-scroll-chat-in-fondo";
 import { parseAllegati, type AllegatoMessaggio } from "@/lib/chat-types";
 import { RISPOSTE_PREDEFINITE_NEGOZIO } from "@/lib/risposte-predefinite-negozio";
 import { useMessaggiConversazione } from "@/lib/use-messaggi-conversazione";
@@ -23,7 +24,7 @@ const MAX_MB = 5;
 type Props = { richiestaId: string; serverInit: NegozioChatInit };
 
 export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listaMessaggiRef = useRef<HTMLDivElement>(null);
 
   const [error, setError] = useState(serverInit.ok ? "" : serverInit.error);
   const [richiestaTesto] = useState<string | null>(
@@ -44,6 +45,7 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
   const richiestaChiusa = statoRichiesta === "chiusa";
 
   const { messaggi, ricarica } = useMessaggiConversazione(conversazioneId);
+  useScrollChatInFondo(listaMessaggiRef, conversazioneId, messaggi);
 
   const [testo, setTesto] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -79,10 +81,6 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
       cancelled = true;
     };
   }, [conversazioneId]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messaggi.length]);
 
   const inserisciPredefinita = (frase: string) => {
     if (richiestaChiusa) return;
@@ -202,7 +200,10 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
         </div>
       ) : null}
 
-      <div className="max-h-[50vh] min-h-[200px] space-y-3 overflow-y-auto px-4 py-4">
+      <div
+        ref={listaMessaggiRef}
+        className="max-h-[50vh] min-h-[200px] space-y-3 overflow-y-auto px-4 py-4"
+      >
         {messaggi.length === 0 ? (
           <p className="text-center text-sm text-subtle">
             Nessun messaggio ancora. Saluta l&apos;acquirente o rispondi usando le frasi rapide sotto.
@@ -275,7 +276,6 @@ export function NegozioChatPanel({ richiestaId, serverInit }: Props) {
             );
           })
         )}
-        <div ref={bottomRef} />
       </div>
 
       <div className="border-t border-border bg-surface-muted px-4 py-3">
