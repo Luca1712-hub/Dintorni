@@ -25,6 +25,7 @@ export function isSiteAccessPathExempt(pathname: string): boolean {
   if (pathname.startsWith("/api/auth/")) return true;
   if (pathname.startsWith("/api/chat/")) return true;
   if (pathname.startsWith("/api/push/")) return true;
+  if (pathname.startsWith("/api/notifiche/")) return true;
   if (pathname.startsWith("/onesignal/")) return true;
   return false;
 }

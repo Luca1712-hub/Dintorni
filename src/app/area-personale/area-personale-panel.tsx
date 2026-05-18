@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { DintorniUserProfile } from "@/lib/profile";
 import { NotifichePushSetup } from "@/components/notifiche-push-setup";
 import { PushDiagnostica } from "@/components/push-diagnostica";
+import { StatoNotificheDispositivo } from "@/components/stato-notifiche-dispositivo";
 import { SelettoreProvinciaComune } from "@/components/selettore-provincia-comune";
 import { CATEGORIE_MERCEOLOGICHE } from "@/lib/categorie-negozio";
 import { geocodeViaEComune } from "@/lib/geocode-negozio-client";
@@ -437,8 +438,9 @@ export function AreaPersonalePanel({ userId, initialUser }: Props) {
         <section className="mt-8 border-t border-border pt-6">
           <h2 className="text-lg font-semibold text-foreground">Notifiche</h2>
           <p className="mt-1 text-sm text-muted">
-            Quando ricevi un messaggio in chat, possiamo avvisarti per email e (se lo attivi sul
-            dispositivo) con una notifica del browser.
+            Le caselle sotto valgono per il tuo account. I riquadri colorati indicano se email e push
+            sono operative; la push riguarda{" "}
+            <strong className="font-medium text-foreground">questo</strong> telefono o browser.
           </p>
           <div className="mt-4 space-y-3">
             <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
@@ -452,8 +454,7 @@ export function AreaPersonalePanel({ userId, initialUser }: Props) {
               <span>
                 <span className="font-medium">Email</span>
                 <span className="block text-muted">
-                  Invia un&apos;email quando arriva un nuovo messaggio (serve{" "}
-                  <code className="rounded bg-surface-muted px-1 text-xs">RESEND_API_KEY</code> sul server).
+                  Ricevi un messaggio in casella quando arriva una chat (vale per tutti i dispositivi).
                 </span>
               </span>
             </label>
@@ -468,13 +469,19 @@ export function AreaPersonalePanel({ userId, initialUser }: Props) {
               <span>
                 <span className="font-medium">Notifiche push</span>
                 <span className="block text-muted">
-                  Consenti l&apos;invio tramite Web Push (puoi attivare il dispositivo qui sotto).
+                  Avvisi del browser su questo dispositivo (va attivato anche nel riquadro sotto).
                 </span>
               </span>
             </label>
           </div>
+          <StatoNotificheDispositivo
+            userId={userId}
+            email={user.email}
+            notificheEmail={user.notificheEmail}
+            notifichePush={user.notifichePush}
+          />
           <div className="mt-5 rounded-lg border border-border bg-surface-muted/80 p-4">
-            <p className="text-sm font-medium text-foreground">Questo dispositivo</p>
+            <p className="text-sm font-medium text-foreground">Attiva push su questo dispositivo</p>
             <p className="mt-1 text-xs text-muted">
               Chrome o Edge consigliati. Su iOS le notifiche web hanno limitazioni note.
             </p>

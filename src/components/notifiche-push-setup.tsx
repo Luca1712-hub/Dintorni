@@ -27,6 +27,7 @@ import {
   registrazioneLocaleCompleta,
   verificaRegistrazioneSuServer,
 } from "@/lib/onesignal/subscription";
+import { notificaAggiornamentoStatoPush } from "@/lib/use-stato-push-dispositivo";
 import { withTimeout } from "@/lib/with-timeout";
 
 type Stato = "idle" | "loading" | "ok" | "err" | "non_supportato" | "no_key";
@@ -63,6 +64,7 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
           if (v.localRegistered) {
             setStato("ok");
             setMessaggio("Notifiche push attive su questo dispositivo.");
+            notificaAggiornamentoStatoPush();
           }
         }
       } catch {
@@ -208,9 +210,11 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
 
       setStato("ok");
       setMessaggio("Notifiche push attive su questo dispositivo.");
+      notificaAggiornamentoStatoPush();
     } catch (e) {
       setStato("err");
       setMessaggio(formatOnesignalError(e));
+      notificaAggiornamentoStatoPush();
     }
   }, [props.abilitato, props.userId]);
 
@@ -223,9 +227,11 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
       await withTimeout(OneSignal.User.PushSubscription.optOut(), 15_000, "Disattivazione");
       setStato("idle");
       setMessaggio("Push disattivato su questo dispositivo.");
+      notificaAggiornamentoStatoPush();
     } catch (e) {
       setStato("err");
       setMessaggio(formatOnesignalError(e));
+      notificaAggiornamentoStatoPush();
     }
   }, []);
 
@@ -294,9 +300,11 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
 
       setStato("ok");
       setMessaggio("Notifiche push attive su questo dispositivo.");
+      notificaAggiornamentoStatoPush();
     } catch (e) {
       setStato("err");
       setMessaggio(e instanceof Error ? e.message : "Errore durante la registrazione.");
+      notificaAggiornamentoStatoPush();
     }
   }, [props.abilitato, props.userId, vapidPublic]);
 
@@ -320,9 +328,11 @@ export function NotifichePushSetup(props: { abilitato: boolean; userId: string }
       }
       setStato("idle");
       setMessaggio("Push disattivato su questo dispositivo.");
+      notificaAggiornamentoStatoPush();
     } catch (e) {
       setStato("err");
       setMessaggio(e instanceof Error ? e.message : "Errore.");
+      notificaAggiornamentoStatoPush();
     }
   }, [props.userId]);
 
