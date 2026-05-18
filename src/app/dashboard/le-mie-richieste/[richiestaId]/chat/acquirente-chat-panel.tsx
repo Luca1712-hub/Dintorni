@@ -18,7 +18,6 @@ import type { RichiestaStato } from "@/lib/richiesta";
 import { useRichiestaStato } from "@/lib/use-richiesta-stato";
 import { ImageAttachButtons } from "@/components/image-attach-buttons";
 import { inviaMessaggioChat } from "@/lib/chat-invio-client";
-import { useScrollChatInFondo } from "@/lib/use-scroll-chat-in-fondo";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -36,7 +35,7 @@ type ConvLabel = ConversazioneRow & { etichetta: string; nonLetti?: number };
 
 export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Props) {
   const router = useRouter();
-  const listaMessaggiRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   /** Evita di forzare di nuovo ?conversazione= quando la lista si aggiorna (polling su mobile). */
   const selezioneInizialeApplicata = useRef(false);
 
@@ -54,7 +53,6 @@ export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Prop
   const richiestaChiusa = statoRichiesta === "chiusa";
 
   const { messaggi, ricarica } = useMessaggiConversazione(selezionata);
-  useScrollChatInFondo(listaMessaggiRef, selezionata, messaggi);
 
   const [testo, setTesto] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -240,6 +238,10 @@ export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Prop
     };
   }, [selezionata, myId, aggiornaBadgeNonLetti]);
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messaggi.length, selezionata]);
+
   const onFilePick = (list: FileList | null) => {
     if (richiestaChiusa) return;
     if (!list?.length) return;
@@ -394,10 +396,7 @@ export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Prop
             ))}
           </div>
 
-          <div
-            ref={listaMessaggiRef}
-            className="max-h-[50vh] min-h-[200px] space-y-3 overflow-y-auto px-4 py-4"
-          >
+          <div className="max-h-[50vh] min-h-[200px] space-y-3 overflow-y-auto px-4 py-4">
             {messaggi.length === 0 ? (
               <p className="text-center text-sm text-subtle">Nessun messaggio in questa chat.</p>
             ) : (
@@ -467,6 +466,7 @@ export function AcquirenteChatPanel({ richiestaId, conversazioneIniziale }: Prop
                 );
               })
             )}
+            <div ref={bottomRef} />
           </div>
 
           <div className="space-y-2 border-t border-border p-4">
